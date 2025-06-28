@@ -103,8 +103,20 @@ export default function Registration() {
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
-          toast.error('Please fill in all required fields');
+        if (!formData.firstName.trim()) {
+          toast.error('First name is required');
+          return false;
+        }
+        if (!formData.lastName.trim()) {
+          toast.error('Last name is required');
+          return false;
+        }
+        if (!formData.email.trim()) {
+          toast.error('Email is required');
+          return false;
+        }
+        if (!formData.password) {
+          toast.error('Password is required');
           return false;
         }
         if (formData.password.length < 6) {
@@ -115,14 +127,26 @@ export default function Registration() {
           toast.error('Passwords do not match');
           return false;
         }
-        if (!formData.dateOfBirth || !formData.gender || !formData.location) {
-          toast.error('Please fill in all required fields');
+        if (!formData.dateOfBirth) {
+          toast.error('Date of birth is required');
+          return false;
+        }
+        if (!formData.gender) {
+          toast.error('Gender is required');
+          return false;
+        }
+        if (!formData.location.trim()) {
+          toast.error('Location is required');
           return false;
         }
         return true;
       case 2:
-        if (!formData.tribe || formData.languages.length === 0) {
-          toast.error('Please select your tribe and at least one language');
+        if (!formData.tribe) {
+          toast.error('Please select your tribe');
+          return false;
+        }
+        if (formData.languages.length === 0) {
+          toast.error('Please select at least one language');
           return false;
         }
         return true;
@@ -133,7 +157,11 @@ export default function Registration() {
         }
         return true;
       case 4:
-        if (!formData.bio || formData.bio.length < 50) {
+        if (!formData.bio.trim()) {
+          toast.error('Bio is required');
+          return false;
+        }
+        if (formData.bio.trim().length < 50) {
           toast.error('Please write a bio of at least 50 characters');
           return false;
         }
@@ -167,10 +195,22 @@ export default function Registration() {
       await completeRegistration(formData);
       toast.success('Registration completed! Please take the cultural quiz to verify your profile.');
       navigate('/cultural-quiz');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Registration error:', error);
-      // Display the specific error message from the server
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      
+      // Handle specific error messages
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (error?.message) {
+        if (error.message.includes('already been registered')) {
+          errorMessage = 'This email address is already registered. Please try logging in instead.';
+        } else if (error.message.includes('validation')) {
+          errorMessage = 'Please check all required fields and try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast.error(errorMessage);
     }
   };

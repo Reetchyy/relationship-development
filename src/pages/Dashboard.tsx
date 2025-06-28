@@ -99,7 +99,14 @@ const recentActivity: RecentActivity[] = [
 
 export default function Dashboard() {
   const { state } = useAuth();
-  const user = state.user!;
+  const { user, profile } = state;
+
+  // Provide fallback values if profile data is not available
+  const displayName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
+  const firstName = profile?.first_name || 'User';
+  const profilePhoto = profile?.profile_photo_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400';
+  const tribe = profile?.cultural_backgrounds?.[0]?.primary_tribe || 'Not specified';
+  const location = profile ? `${profile.location_city}, ${profile.location_country}` : 'Location not set';
 
   const stats = [
     { label: 'Profile Views', value: '47', icon: TrendingUp, color: 'text-blue-400' },
@@ -119,14 +126,14 @@ export default function Dashboard() {
         >
           <div className="flex items-center space-x-4">
             <img
-              src={user.avatar}
-              alt={user.name}
-              className="w-16 h-16 rounded-full border-4 border-white/20"
+              src={profilePhoto}
+              alt={displayName}
+              className="w-16 h-16 rounded-full border-4 border-white/20 object-cover"
             />
             <div>
-              <h1 className="text-2xl font-bold">Welcome back, {user.name.split(' ')[0]}!</h1>
+              <h1 className="text-2xl font-bold">Welcome back, {firstName}!</h1>
               <p className="text-primary-100">
-                {user.culturalBackground.tribe} • {user.culturalBackground.region}
+                {tribe} • {location}
               </p>
             </div>
           </div>
