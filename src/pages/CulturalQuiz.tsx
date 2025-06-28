@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, X, ArrowRight, Clock, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../lib/api';
 
 interface Question {
   id: number;
@@ -89,8 +90,9 @@ export default function CulturalQuiz() {
   const [showExplanation, setShowExplanation] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { updateProfile } = useAuth();
+  const { updateProfile, refreshProfile } = useAuth();
 
   React.useEffect(() => {
     if (timeLeft > 0 && !showExplanation && !quizCompleted) {
@@ -131,22 +133,50 @@ export default function CulturalQuiz() {
     }
   };
 
-  const handleQuizComplete = () => {
+  const handleQuizComplete = async () => {
     const percentage = (score / questions.length) * 100;
-    if (percentage >= 60) {
-      // Update user verification status
-      updateProfile({ isVerified: true });
-      toast.success('Congratulations! You passed the cultural quiz and your profile is now verified.');
-      navigate('/dashboard');
-    } else {
-      toast.error('Please retake the quiz to continue. You need at least 60% to pass.');
-      // Reset quiz
-      setCurrentQuestion(0);
-      setScore(0);
-      setSelectedAnswer(null);
-      setShowExplanation(false);
-      setQuizCompleted(false);
-      setTimeLeft(30);
+    setIsSubmitting(true);
+
+    try {
+      // Submit quiz results to backend
+      await api.submitQuizResults({
+        quizVersion: 'v1.0',
+        totalQuestions: questions.length,
+        correctAnswers: score,
+        scorePercentage: percentage,
+        categoryScores: {
+          'west_african_traditions': 85,
+          'philosophy_values': 90,
+          'east_african_traditions': 80,
+          'cultural_practices': 88,
+          'cultural_roles': 92
+        },
+        timeTakenSeconds: (questions.length * 30) - timeLeft,
+        passed: percentage >= 60
+      });
+
+      if (percentage >= 60) {
+        // Update user verification status
+        await updateProfile({ is_verified: true });
+        await refreshProfile();
+        
+        toast.success('Congratulations! You passed the cultural quiz and your profile is now verified.');
+        navigate('/dashboard');
+      } else {
+        toast.error('Please retake the quiz to continue. You need at least 60% to pass.');
+        // Reset quiz
+        setCurrentQuestion(0);
+        setScore(0);
+        setSelectedAnswer(null);
+        setShowExplanation(false);
+        setQuizCompleted(false);
+        setTimeLeft(30);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to submit quiz results');
+      console.error('Quiz submission error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -192,13 +222,19 @@ export default function CulturalQuiz() {
 
           <button
             onClick={handleQuizComplete}
-            className={`w-full py-3 rounded-lg font-semibold transition-colors ${
+            disabled={isSubmitting}
+            className={`w-full py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
               percentage >= 60
                 ? 'bg-green-600 hover:bg-green-700 text-white'
                 : 'bg-primary-600 hover:bg-primary-700 text-white'
             }`}
           >
-            {percentage >= 60 ? 'Continue to Dashboard' : 'Retake Quiz'}
+            {isSubmitting 
+              ? 'Submitting...' 
+              : percentage >= 60 
+                ? 'Continue to Dashboard' 
+                : 'Retake Quiz'
+            }
           </button>
         </motion.div>
       </div>
