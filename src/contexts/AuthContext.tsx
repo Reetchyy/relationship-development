@@ -166,21 +166,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
-      const response = await apiService.register({
+      const tempPassword = 'temporary-password';
+      
+      // First register the user
+      const registerResponse = await apiService.register({
         email: userData.email,
-        password: 'temporary-password', // You might want to handle this differently
+        password: tempPassword,
         firstName: userData.firstName,
         lastName: userData.lastName,
       });
       
-      if (response.user && response.profile) {
+      // Then immediately log them in to get the access token
+      const loginResponse = await apiService.login({
+        email: userData.email,
+        password: tempPassword
+      });
+      
+      if (loginResponse.user && loginResponse.profile) {
         dispatch({
           type: 'LOGIN_SUCCESS',
           payload: {
-            user: response.user,
-            profile: response.profile
+            user: loginResponse.user,
+            profile: loginResponse.profile
           }
         });
+      } else {
+        throw new Error('Failed to authenticate after registration');
       }
     } catch (error) {
       dispatch({ type: 'SET_LOADING', payload: false });
