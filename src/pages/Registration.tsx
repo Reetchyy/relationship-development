@@ -10,8 +10,7 @@ import {
   ArrowRight, 
   ArrowLeft,
   Check,
-  MapPin,
-  Lock
+  MapPin
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,7 +19,6 @@ interface FormData {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   phone: string;
   dateOfBirth: string;
   gender: string;
@@ -59,7 +57,6 @@ export default function Registration() {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     phone: '',
     dateOfBirth: '',
     gender: '',
@@ -157,22 +154,6 @@ export default function Registration() {
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="Enter your email"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                  placeholder="Create a secure password"
                 />
               </div>
             </div>
