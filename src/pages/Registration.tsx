@@ -169,7 +169,9 @@ export default function Registration() {
       navigate('/cultural-quiz');
     } catch (error) {
       console.error('Registration error:', error);
-      toast.error('Registration failed. Please try again.');
+      // Display the specific error message from the server
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed. Please try again.';
+      toast.error(errorMessage);
     }
   };
 

@@ -112,7 +112,21 @@ class ApiService {
   }
 
   async getCurrentUser() {
-    return this.request<ApiResponse>('/auth/me');
+    try {
+      return await this.request<ApiResponse>('/auth/me');
+    } catch (error) {
+      // Handle expected authentication errors gracefully
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Invalid or expired token') || 
+          errorMessage.includes('Access token required') ||
+          errorMessage.includes('JWT expired') ||
+          errorMessage.includes('No token provided')) {
+        // Return a response indicating no authenticated user instead of throwing
+        return { user: null, profile: null };
+      }
+      // Re-throw other unexpected errors
+      throw error;
+    }
   }
 
   // Profile endpoints

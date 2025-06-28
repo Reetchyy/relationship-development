@@ -114,7 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'LOGOUT' });
       }
     } catch (error) {
-      console.error('Auth check failed:', error);
+      // Only log unexpected errors, not authentication failures
+      console.error('Unexpected auth check error:', error);
       dispatch({ type: 'LOGOUT' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
