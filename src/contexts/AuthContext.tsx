@@ -204,47 +204,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true });
     
     try {
-      // Register with Supabase
-      const { data, error } = await supabase.auth.signUp({
+      // Create profile via API (backend handles Supabase Auth user creation)
+      await api.register({
         email: userData.email,
         password: userData.password,
-        options: {
-          data: {
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-          }
-        }
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        dateOfBirth: userData.dateOfBirth,
+        gender: userData.gender,
+        location: {
+          city: userData.location?.split(',')[0]?.trim() || '',
+          country: userData.location?.split(',')[1]?.trim() || ''
+        },
+        phone: userData.phone
       });
 
-      if (error) throw error;
+      // If cultural background data exists, save it
+      if (userData.tribe || userData.languages?.length > 0) {
+        await api.updateCulturalBackground({
+          primaryTribe: userData.tribe,
+          languagesSpoken: userData.languages || [],
+          religion: userData.religion,
+          birthCountry: userData.location?.split(',')[1]?.trim() || ''
+        });
+      }
 
-      if (data.user) {
-        // Create profile via API
-        await api.register({
+      // Sign in the user to establish session
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: userData.email,
-          password: userData.password,
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          dateOfBirth: userData.dateOfBirth,
-          gender: userData.gender,
-          location: {
-            city: userData.location?.split(',')[0]?.trim() || '',
-            country: userData.location?.split(',')[1]?.trim() || ''
-          },
-          phone: userData.phone
+          password: userData.password
         });
 
-        // If cultural background data exists, save it
-        if (userData.tribe || userData.languages?.length > 0) {
-          await api.updateCulturalBackground({
-            primaryTribe: userData.tribe,
-            languagesSpoken: userData.languages || [],
-            religion: userData.religion,
-            birthCountry: userData.location?.split(',')[1]?.trim() || ''
-          });
+        if (error) {
+          // Handle email not confirmed case gracefully
+          if (error.message.includes('Email not confirmed')) {
+            toast.success('Registration completed! Please check your email to verify your account.');
+            dispatch({ type: 'SET_LOADING', payload: false });
+            return;
+          }
+          throw error;
         }
 
+        // Session will be handled by auth state change listener
+        toast.success('Registration completed successfully!');
+      } catch (signInError: any) {
+        // If sign in fails but registration succeeded, still show success
+        console.error('Sign in after registration failed:', signInError);
         toast.success('Registration completed! Please check your email to verify your account.');
+        dispatch({ type: 'SET_LOADING', payload: false });
       }
     } catch (error: any) {
       dispatch({ type: 'SET_LOADING', payload: false });
