@@ -11,7 +11,9 @@ import {
   ArrowLeft,
   Check,
   MapPin,
-  Lock
+  Lock,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +23,7 @@ interface FormData {
   lastName: string;
   email: string;
   password: string;
+  confirmPassword: string;
   phone: string;
   dateOfBirth: string;
   gender: string;
@@ -55,11 +58,14 @@ const languages = [
 
 export default function Registration() {
   const [currentStep, setCurrentStep] = useState(1);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
     dateOfBirth: '',
     gender: '',
@@ -94,9 +100,54 @@ export default function Registration() {
     setFormData(prev => ({ ...prev, [field]: file }));
   };
 
+  const validateStep = (step: number): boolean => {
+    switch (step) {
+      case 1:
+        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
+          toast.error('Please fill in all required fields');
+          return false;
+        }
+        if (formData.password.length < 6) {
+          toast.error('Password must be at least 6 characters long');
+          return false;
+        }
+        if (formData.password !== formData.confirmPassword) {
+          toast.error('Passwords do not match');
+          return false;
+        }
+        if (!formData.dateOfBirth || !formData.gender || !formData.location) {
+          toast.error('Please fill in all required fields');
+          return false;
+        }
+        return true;
+      case 2:
+        if (!formData.tribe || formData.languages.length === 0) {
+          toast.error('Please select your tribe and at least one language');
+          return false;
+        }
+        return true;
+      case 3:
+        if (!formData.profilePhoto) {
+          toast.error('Please upload a profile photo');
+          return false;
+        }
+        return true;
+      case 4:
+        if (!formData.bio || formData.bio.length < 50) {
+          toast.error('Please write a bio of at least 50 characters');
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
   const nextStep = () => {
-    if (currentStep < steps.length) {
-      setCurrentStep(currentStep + 1);
+    if (validateStep(currentStep)) {
+      if (currentStep < steps.length) {
+        setCurrentStep(currentStep + 1);
+      }
     }
   };
 
@@ -107,12 +158,18 @@ export default function Registration() {
   };
 
   const handleSubmit = async () => {
+    if (!validateStep(currentStep)) {
+      return;
+    }
+
     try {
+      // Complete registration with the form data including password
       await completeRegistration(formData);
       toast.success('Registration completed! Please take the cultural quiz to verify your profile.');
       navigate('/cultural-quiz');
-    } catch (error: any) {
-      toast.error(error.message || 'Registration failed');
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast.error('Registration failed. Please try again.');
     }
   };
 
@@ -124,7 +181,7 @@ export default function Registration() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  First Name
+                  First Name *
                 </label>
                 <input
                   type="text"
@@ -132,11 +189,12 @@ export default function Registration() {
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="Enter your first name"
+                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Last Name
+                  Last Name *
                 </label>
                 <input
                   type="text"
@@ -144,13 +202,14 @@ export default function Registration() {
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="Enter your last name"
+                  required
                 />
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Email Address
+                Email Address *
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -160,23 +219,59 @@ export default function Registration() {
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="Enter your email"
+                  required
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-                  placeholder="Create a secure password"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    className="w-full pl-10 pr-12 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                    placeholder="Create a password"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">Minimum 6 characters</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Confirm Password *
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={formData.confirmPassword}
+                    onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                    className="w-full pl-10 pr-12 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                    placeholder="Confirm your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -199,27 +294,30 @@ export default function Registration() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Date of Birth
+                  Date of Birth *
                 </label>
                 <input
                   type="date"
                   value={formData.dateOfBirth}
                   onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                  required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Gender
+                  Gender *
                 </label>
                 <select
                   value={formData.gender}
                   onChange={(e) => handleInputChange('gender', e.target.value)}
                   className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                  required
                 >
                   <option value="">Select gender</option>
                   <option value="male">Male</option>
                   <option value="female">Female</option>
+                  <option value="non-binary">Non-binary</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -227,7 +325,7 @@ export default function Registration() {
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Current Location
+                Current Location *
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -237,6 +335,7 @@ export default function Registration() {
                   onChange={(e) => handleInputChange('location', e.target.value)}
                   className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                   placeholder="City, Country"
+                  required
                 />
               </div>
             </div>
@@ -248,12 +347,13 @@ export default function Registration() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Tribe/Ethnic Group
+                Tribe/Ethnic Group *
               </label>
               <select
                 value={formData.tribe}
                 onChange={(e) => handleInputChange('tribe', e.target.value)}
                 className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                required
               >
                 <option value="">Select your tribe</option>
                 {tribes.map(tribe => (
@@ -264,9 +364,9 @@ export default function Registration() {
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Languages Spoken
+                Languages Spoken * (Select at least one)
               </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-48 overflow-y-auto border border-slate-600 rounded-lg p-4 bg-slate-700/50">
                 {languages.map(language => (
                   <label key={language} className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -279,6 +379,9 @@ export default function Registration() {
                   </label>
                 ))}
               </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Selected: {formData.languages.length} language{formData.languages.length !== 1 ? 's' : ''}
+              </p>
             </div>
 
             <div>
@@ -344,7 +447,7 @@ export default function Registration() {
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Profile Photo
+                  Profile Photo *
                 </label>
                 <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
                   <Camera className="w-12 h-12 text-slate-400 mx-auto mb-4" />
@@ -355,6 +458,7 @@ export default function Registration() {
                     onChange={(e) => e.target.files?.[0] && handleFileUpload('profilePhoto', e.target.files[0])}
                     className="hidden"
                     id="profile-photo"
+                    required
                   />
                   <label
                     htmlFor="profile-photo"
@@ -366,7 +470,7 @@ export default function Registration() {
                   {formData.profilePhoto && (
                     <p className="text-green-400 mt-2 flex items-center justify-center">
                       <Check className="w-4 h-4 mr-1" />
-                      Photo uploaded
+                      Photo uploaded: {formData.profilePhoto.name}
                     </p>
                   )}
                 </div>
@@ -374,11 +478,11 @@ export default function Registration() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  ID Document
+                  ID Document (Optional)
                 </label>
                 <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
                   <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-2">Upload a government-issued ID</p>
+                  <p className="text-slate-400 mb-2">Upload a government-issued ID for faster verification</p>
                   <input
                     type="file"
                     accept="image/*,.pdf"
@@ -396,7 +500,7 @@ export default function Registration() {
                   {formData.idDocument && (
                     <p className="text-green-400 mt-2 flex items-center justify-center">
                       <Check className="w-4 h-4 mr-1" />
-                      Document uploaded
+                      Document uploaded: {formData.idDocument.name}
                     </p>
                   )}
                 </div>
@@ -410,7 +514,7 @@ export default function Registration() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Tell us about yourself
+                Tell us about yourself * (Minimum 50 characters)
               </label>
               <textarea
                 value={formData.bio}
@@ -418,7 +522,12 @@ export default function Registration() {
                 rows={6}
                 className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none"
                 placeholder="Share your story, values, and what you're looking for in a partner..."
+                required
+                minLength={50}
               />
+              <p className="text-xs text-slate-400 mt-1">
+                {formData.bio.length}/50 characters minimum
+              </p>
             </div>
 
             <div className="bg-slate-700/50 rounded-lg p-6">

@@ -21,11 +21,23 @@ router.post('/register', asyncHandler(async (req, res) => {
     });
   }
 
+  if (password.length < 6) {
+    return res.status(400).json({
+      error: 'Password must be at least 6 characters long',
+      code: 'WEAK_PASSWORD'
+    });
+  }
+
   // Create user in Supabase Auth
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
     email_confirm: true, // Auto-confirm for development
+    user_metadata: {
+      first_name: firstName,
+      last_name: lastName,
+      full_name: `${firstName} ${lastName}`
+    }
   });
 
   if (authError) {
@@ -35,7 +47,7 @@ router.post('/register', asyncHandler(async (req, res) => {
     });
   }
 
-  // Create profile record
+  // Create profile record with proper name fields
   const { data: profile, error: profileError } = await supabaseAdmin
     .from('profiles')
     .insert({
