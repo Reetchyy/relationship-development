@@ -49,6 +49,32 @@ A modern relationship development platform built with React, Node.js, and Supaba
    - Frontend: http://localhost:5173
    - Backend: http://localhost:3001
 
+## 🌐 Deployment
+
+This application uses a **hybrid deployment strategy**:
+
+- **Frontend**: Deploy to [Netlify](https://netlify.com) (React/Vite)
+- **Backend**: Deploy to [Railway](https://railway.app) or [Render](https://render.com) (Node.js/Express)
+- **Database**: [Supabase](https://supabase.com) (hosted PostgreSQL)
+
+📖 **Detailed deployment guide**: [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### Quick Deploy
+
+1. **Frontend (Netlify)**:
+   - Connect your GitHub repo to Netlify
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+
+2. **Backend (Railway)**:
+   - Connect your GitHub repo to Railway
+   - Set root directory to `server`
+   - Add environment variables
+
+3. **Environment Variables**:
+   - Set `VITE_API_URL` to your backend URL
+   - Configure Supabase credentials
+
 ## 📁 Project Structure
 
 ```
@@ -57,6 +83,8 @@ relationship-development/
 ├── server/             # Node.js backend
 ├── supabase/           # Database migrations
 ├── .env.example        # Environment variables template
+├── netlify.toml        # Netlify configuration
+├── DEPLOYMENT.md       # Detailed deployment guide
 └── README.md
 ```
 
@@ -75,6 +103,7 @@ Required environment variables (see `.env.example`):
 - `VITE_SUPABASE_URL` - Your Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` - Supabase anonymous/public key
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
+- `VITE_API_URL` - Backend API URL (for production)
 
 ## 🛠️ Tech Stack
 
@@ -83,6 +112,7 @@ Required environment variables (see `.env.example`):
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
 - **Real-time**: Supabase Realtime
+- **Deployment**: Netlify (frontend), Railway/Render (backend)
 
 ## 📝 Contributing
 

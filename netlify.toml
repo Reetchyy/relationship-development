@@ -1,0 +1,37 @@
+[build]
+  # Build command for the frontend
+  command = "npm run build"
+  # Publish directory (Vite's default output)
+  publish = "dist"
+
+[build.environment]
+  # Node version for build
+  NODE_VERSION = "18"
+
+# Handle client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# API proxy (optional - for development)
+# [[redirects]]
+#   from = "/api/*"
+#   to = "https://your-backend-url.com/api/:splat"
+#   status = 200
+#   force = true
+
+# Headers for security
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Cache static assets
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable" 
