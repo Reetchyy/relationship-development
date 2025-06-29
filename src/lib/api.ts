@@ -106,14 +106,18 @@ class ApiClient {
 
   // Cultural quiz endpoints
   async submitQuizResults(quizData: any) {
-    return this.request('/cultural/quiz-results', {
+    return this.request('/quiz/submit', {
       method: 'POST',
       body: JSON.stringify(quizData),
     });
   }
 
   async getQuizQuestions() {
-    return this.request('/cultural/quiz-questions');
+    return this.request('/quiz/questions');
+  }
+
+  async getQuizResults() {
+    return this.request('/quiz/results');
   }
 }
 

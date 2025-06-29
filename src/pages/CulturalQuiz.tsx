@@ -92,7 +92,7 @@ export default function CulturalQuiz() {
   const [timeLeft, setTimeLeft] = useState(30);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { updateProfile, refreshProfile } = useAuth();
+  const { updateProfile, checkAuthStatus } = useAuth();
 
   React.useEffect(() => {
     if (timeLeft > 0 && !showExplanation && !quizCompleted) {
@@ -156,9 +156,11 @@ export default function CulturalQuiz() {
       });
 
       if (percentage >= 60) {
-        // Update user verification status
-        await updateProfile({ is_verified: true });
-        await refreshProfile();
+        // Update user verification status locally
+        updateProfile({ is_verified: true });
+        
+        // Refresh user data from server
+        await checkAuthStatus();
         
         toast.success('Congratulations! You passed the cultural quiz and your profile is now verified.');
         navigate('/dashboard');
