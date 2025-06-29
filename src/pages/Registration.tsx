@@ -193,7 +193,7 @@ export default function Registration() {
     try {
       // Complete registration with the form data including password
       await completeRegistration(formData);
-      toast.success('Registration completed! Please take the cultural quiz to verify your profile.');
+      toast.success('Registration completed successfully! Please take the cultural quiz to verify your profile.');
       navigate('/cultural-quiz');
     } catch (error: any) {
       console.error('Registration error:', error);
@@ -202,10 +202,12 @@ export default function Registration() {
       let errorMessage = 'Registration failed. Please try again.';
       
       if (error?.message) {
-        if (error.message.includes('already been registered')) {
+        if (error.message.includes('already been registered') || error.message.includes('already exists')) {
           errorMessage = 'This email address is already registered. Please try logging in instead.';
-        } else if (error.message.includes('validation')) {
+        } else if (error.message.includes('validation') || error.message.includes('Validation failed')) {
           errorMessage = 'Please check all required fields and try again.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
         } else {
           errorMessage = error.message;
         }

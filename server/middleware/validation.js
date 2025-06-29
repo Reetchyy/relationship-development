@@ -26,14 +26,14 @@ export const validate = (schema) => {
 
 // Common validation schemas
 export const schemas = {
-  // Profile validation
+  // Profile validation - made first_name and last_name optional for updates
   profile: Joi.object({
-    first_name: Joi.string().min(2).max(50).required(),
-    last_name: Joi.string().min(2).max(50).required(),
-    date_of_birth: Joi.date().max('now').required(),
-    gender: Joi.string().valid('male', 'female', 'non-binary', 'other').required(),
-    location_city: Joi.string().min(2).max(100).required(),
-    location_country: Joi.string().min(2).max(100).required(),
+    first_name: Joi.string().min(2).max(50).optional(),
+    last_name: Joi.string().min(2).max(50).optional(),
+    date_of_birth: Joi.date().max('now').optional(),
+    gender: Joi.string().valid('male', 'female', 'non-binary', 'other').optional(),
+    location_city: Joi.string().min(2).max(100).optional(),
+    location_country: Joi.string().min(2).max(100).optional(),
     occupation: Joi.string().max(100).optional(),
     education_level: Joi.string().max(100).optional(),
     bio: Joi.string().max(1000).optional(),
@@ -41,10 +41,10 @@ export const schemas = {
 
   // Cultural background validation
   culturalBackground: Joi.object({
-    primary_tribe: Joi.string().min(2).max(50).required(),
+    primary_tribe: Joi.string().min(2).max(50).optional(),
     secondary_tribes: Joi.array().items(Joi.string().max(50)).optional(),
-    birth_country: Joi.string().min(2).max(100).required(),
-    languages_spoken: Joi.array().items(Joi.string().max(50)).min(1).required(),
+    birth_country: Joi.string().min(2).max(100).optional(),
+    languages_spoken: Joi.array().items(Joi.string().max(50)).optional(),
     language_fluency: Joi.object().optional(),
     religion: Joi.string().max(50).optional(),
     religious_importance: Joi.number().integer().min(1).max(5).optional(),
