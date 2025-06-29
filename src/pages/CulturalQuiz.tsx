@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Check, X, ArrowRight, Clock, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../lib/api';
+import { apiService } from '../services/api';
 
 interface Question {
   id: number;
@@ -139,20 +139,18 @@ export default function CulturalQuiz() {
 
     try {
       // Submit quiz results to backend
-      await api.submitQuizResults({
-        quizVersion: 'v1.0',
-        totalQuestions: questions.length,
-        correctAnswers: score,
-        scorePercentage: percentage,
-        categoryScores: {
+      await apiService.submitQuiz({
+        total_questions: questions.length,
+        correct_answers: score,
+        score_percentage: percentage,
+        category_scores: {
           'west_african_traditions': 85,
           'philosophy_values': 90,
           'east_african_traditions': 80,
           'cultural_practices': 88,
           'cultural_roles': 92
         },
-        timeTakenSeconds: (questions.length * 30) - timeLeft,
-        passed: percentage >= 60
+        time_taken_seconds: (questions.length * 30) - timeLeft
       });
 
       if (percentage >= 60) {
