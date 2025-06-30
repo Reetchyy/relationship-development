@@ -19,27 +19,45 @@ import { useAuth } from '../contexts/AuthContext';
 export default function Profile() {
   const { state } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const user = state.user!;
+  const { user, profile } = state;
+
+  // Provide fallback values if profile data is not available
+  const displayName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
+  const profilePhoto = profile?.profile_photo_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400';
+  const tribe = profile?.cultural_backgrounds?.[0]?.primary_tribe || 'Not specified';
+  const location = profile ? `${profile.location_city}, ${profile.location_country}` : 'Location not set';
+  const bio = profile?.bio || 'No bio available yet. Click edit to add your story.';
+  const occupation = profile?.occupation || 'Not specified';
+  const education = profile?.education_level || 'Not specified';
+  const isVerified = profile?.is_verified || false;
+
+  // Mock data for cultural background if not available
+  const culturalBackground = profile?.cultural_backgrounds?.[0] || {
+    primary_tribe: 'Not specified',
+    birth_country: 'Not specified',
+    languages_spoken: ['English'],
+    religion: 'Not specified'
+  };
 
   const profileSections = [
     {
       title: 'Cultural Background',
       icon: Globe,
       content: [
-        { label: 'Tribe/Ethnicity', value: user.culturalBackground.tribe },
-        { label: 'Region', value: user.culturalBackground.region },
-        { label: 'Languages', value: user.culturalBackground.languages.join(', ') },
-        { label: 'Religion', value: user.culturalBackground.religion },
+        { label: 'Tribe/Ethnicity', value: culturalBackground.primary_tribe },
+        { label: 'Birth Country', value: culturalBackground.birth_country },
+        { label: 'Languages', value: culturalBackground.languages_spoken?.join(', ') || 'English' },
+        { label: 'Religion', value: culturalBackground.religion || 'Not specified' },
       ]
     },
     {
       title: 'Personal Information',
       icon: User,
       content: [
-        { label: 'Age', value: '28' },
-        { label: 'Location', value: 'Toronto, Canada' },
-        { label: 'Education', value: 'Master\'s in Engineering' },
-        { label: 'Occupation', value: 'Software Engineer' },
+        { label: 'Age', value: profile?.date_of_birth ? calculateAge(profile.date_of_birth) : 'Not specified' },
+        { label: 'Location', value: location },
+        { label: 'Education', value: education },
+        { label: 'Occupation', value: occupation },
       ]
     },
     {
@@ -60,12 +78,26 @@ export default function Profile() {
   ];
 
   const verificationStatus = [
-    { type: 'Email', verified: true },
-    { type: 'Phone', verified: true },
-    { type: 'ID Document', verified: true },
-    { type: 'Cultural Quiz', verified: true },
+    { type: 'Email', verified: !!user?.email },
+    { type: 'Phone', verified: false },
+    { type: 'ID Document', verified: false },
+    { type: 'Cultural Quiz', verified: isVerified },
     { type: 'Community Endorsement', verified: false },
   ];
+
+  // Helper function to calculate age
+  function calculateAge(birthDate: string): string {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+    
+    return age.toString();
+  }
 
   return (
     <Layout>
@@ -79,8 +111,8 @@ export default function Profile() {
           <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
             <div className="relative">
               <img
-                src={user.avatar}
-                alt={user.name}
+                src={profilePhoto}
+                alt={displayName}
                 className="w-32 h-32 rounded-full object-cover border-4 border-primary-500"
               />
               <button className="absolute bottom-0 right-0 w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white hover:bg-primary-700 transition-colors">
@@ -90,8 +122,8 @@ export default function Profile() {
             
             <div className="flex-1 text-center md:text-left">
               <div className="flex items-center justify-center md:justify-start space-x-2 mb-2">
-                <h1 className="text-3xl font-bold text-white">{user.name}</h1>
-                {user.isVerified && (
+                <h1 className="text-3xl font-bold text-white">{displayName}</h1>
+                {isVerified && (
                   <Shield className="w-6 h-6 text-green-400" />
                 )}
               </div>
@@ -99,17 +131,16 @@ export default function Profile() {
               <div className="flex items-center justify-center md:justify-start space-x-4 text-slate-300 mb-4">
                 <div className="flex items-center space-x-1">
                   <MapPin className="w-4 h-4" />
-                  <span>Toronto, Canada</span>
+                  <span>{location}</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <Globe className="w-4 h-4" />
-                  <span>{user.culturalBackground.tribe}</span>
+                  <span>{tribe}</span>
                 </div>
               </div>
               
               <p className="text-slate-300 mb-6">
-                Passionate about preserving our rich cultural heritage while building meaningful connections. 
-                Looking for someone who shares similar values and appreciates the beauty of African traditions.
+                {bio}
               </p>
               
               <div className="flex flex-col sm:flex-row gap-3">
@@ -144,10 +175,7 @@ export default function Profile() {
                 About Me
               </h2>
               <p className="text-slate-300 leading-relaxed">
-                Born and raised in Lagos, Nigeria, I've been living in Toronto for the past 5 years. 
-                I'm deeply connected to my Igbo roots and believe that our traditions and values should 
-                guide us in finding meaningful relationships. I enjoy cooking traditional dishes, 
-                speaking my native language, and participating in cultural events in the diaspora community.
+                {bio}
               </p>
             </motion.div>
 
@@ -225,7 +253,9 @@ export default function Profile() {
               <div className="mt-4 pt-4 border-t border-slate-600">
                 <div className="flex items-center justify-between">
                   <span className="text-white font-medium">Verification Score</span>
-                  <span className="text-green-400 font-bold">85%</span>
+                  <span className="text-green-400 font-bold">
+                    {Math.round((verificationStatus.filter(item => item.verified).length / verificationStatus.length) * 100)}%
+                  </span>
                 </div>
               </div>
             </motion.div>
