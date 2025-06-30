@@ -296,7 +296,21 @@ CREATE POLICY "Users can manage own cultural background"
   ON cultural_backgrounds
   FOR ALL
   TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- RLS Policies for cultural_quiz_results
+CREATE POLICY "Users can view own quiz results"
+  ON cultural_quiz_results
+  FOR SELECT
+  TO authenticated
   USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own quiz results"
+  ON cultural_quiz_results
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
 
 -- RLS Policies for matches
 CREATE POLICY "Users can view their matches"

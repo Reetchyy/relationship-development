@@ -52,12 +52,13 @@ router.post('/submit',
         score_percentage,
         category_scores,
         time_taken_seconds,
-        passed: score_percentage >= 60
+        // passed: score_percentage >= 60
       })
       .select()
       .single();
 
     if (error) {
+      console.error('Supabase error:', error);
       return res.status(500).json({
         error: 'Failed to save quiz results',
         code: 'SAVE_ERROR'
