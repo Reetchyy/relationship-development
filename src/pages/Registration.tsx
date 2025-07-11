@@ -82,7 +82,6 @@ export default function Registration() {
   });
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
-  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -481,6 +480,79 @@ export default function Registration() {
       case 3:
         return (
           <div className="space-y-6">
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-semibold text-white mb-2">Identity Verification</h3>
+              <p className="text-slate-400">Help us verify your identity to ensure a safe community</p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Profile Photo *
+                </label>
+                <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+                  <Camera className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-slate-400 mb-2">Upload a clear photo of yourself</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleFileUpload('profilePhoto', e.target.files[0])}
+                    className="hidden"
+                    id="profile-photo"
+                    required
+                  />
+                  <label
+                    htmlFor="profile-photo"
+                    className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Photo
+                  </label>
+                  {formData.profilePhoto && (
+                    <p className="text-green-400 mt-2 flex items-center justify-center">
+                      <Check className="w-4 h-4 mr-1" />
+                      Photo uploaded: {formData.profilePhoto.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  ID Document (Optional)
+                </label>
+                <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+                  <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-slate-400 mb-2">Upload a government-issued ID for faster verification</p>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={(e) => e.target.files?.[0] && handleFileUpload('idDocument', e.target.files[0])}
+                    className="hidden"
+                    id="id-document"
+                  />
+                  <label
+                    htmlFor="id-document"
+                    className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload ID
+                  </label>
+                  {formData.idDocument && (
+                    <p className="text-green-400 mt-2 flex items-center justify-center">
+                      <Check className="w-4 h-4 mr-1" />
+                      Document uploaded: {formData.idDocument.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
                 Tell us about yourself * (Minimum 50 characters)
@@ -503,16 +575,16 @@ export default function Registration() {
               <h4 className="text-lg font-semibold text-white mb-4">Next Steps</h4>
               <ul className="space-y-2 text-slate-300">
                 <li className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-slate-400 rounded mr-2"></div>
-                  Upload profile photo and verify identity
-                </li>
-                <li className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-slate-400 rounded mr-2"></div>
+                  <Check className="w-5 h-5 text-green-400 mr-2" />
                   Complete cultural knowledge quiz
                 </li>
                 <li className="flex items-center">
-                  <div className="w-5 h-5 border-2 border-slate-400 rounded mr-2"></div>
-                  Start matching with compatible partners
+                  <Check className="w-5 h-5 text-green-400 mr-2" />
+                  Identity verification review
+                </li>
+                <li className="flex items-center">
+                  <Check className="w-5 h-5 text-green-400 mr-2" />
+                  Profile activation
                 </li>
               </ul>
             </div>
@@ -603,10 +675,9 @@ export default function Registration() {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={uploadingFiles}
                 className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                {uploadingFiles ? 'Uploading Files...' : 'Complete Registration'}
+                Complete Registration
                 <Check className="w-5 h-5 ml-2" />
               </button>
             )}
