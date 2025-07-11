@@ -660,6 +660,7 @@ export default function Registration() {
             <span>Back to Home</span>
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Join Diaspora Connect</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Join ReDPlAD</h1>
           <p className="text-slate-400">Create your culturally-aware profile</p>
         </div>
 

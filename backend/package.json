@@ -1,7 +1,7 @@
 {
-  "name": "diaspora-connect-backend",
+  "name": "redplad-backend",
   "version": "1.0.0",
-  "description": "Backend API for African Diaspora Relationship Platform",
+  "description": "Backend API for ReDPlAD - African Diaspora Relationship Platform",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

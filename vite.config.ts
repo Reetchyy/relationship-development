@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
-        name: 'Diaspora Connect',
-        short_name: 'DiasporaConnect',
+        name: 'ReDPlAD',
+        short_name: 'ReDPlAD',
         description: 'Cultural relationship platform for Africans in diaspora',
         theme_color: '#D97706',
         background_color: '#0F172A',
