@@ -46,11 +46,6 @@ class UploadService {
       throw error;
     }
   }
-    
-    return {
-      'Authorization': token ? `Bearer ${token}` : '',
-    };
-  }
 
   private async uploadFile(endpoint: string, file: File, additionalData?: Record<string, string>): Promise<UploadResponse> {
     console.log('📤 Starting file upload:', {
@@ -60,14 +55,8 @@ class UploadService {
       fileType: file.type
     });
 
-    let headers;
-    try {
-      headers = await this.getAuthHeaders();
-      console.log('🔑 Auth headers:', headers.Authorization ? 'Token present' : 'No token');
-    } catch (error) {
-      console.error('❌ Failed to get auth headers:', error);
-      throw new Error(`Authentication failed: ${error.message}`);
-    }
+    const headers = await this.getAuthHeaders();
+    console.log('🔑 Auth headers:', headers.Authorization ? 'Token present' : 'No token');
     
     const formData = new FormData();
     formData.append(endpoint === 'profile-photo' ? 'profilePhoto' : endpoint === 'video' ? 'video' : 'document', file);
