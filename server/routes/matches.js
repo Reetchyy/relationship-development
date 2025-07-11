@@ -77,10 +77,8 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
 
   // Get user's preferences
   const { data: userProfile } = await supabaseAdmin
-    .from('user_preferences')
     .from('profiles')
     .select('*')
-    .eq('user_id', req.user.id)
     .eq('id', req.user.id)
     .single();
 
