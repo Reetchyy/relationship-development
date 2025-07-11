@@ -255,26 +255,26 @@ router.get('/:id/stats', authenticateToken, asyncHandler(async (req, res) => {
     .select('*', { count: 'exact', head: true })
     .or(`user1_id.eq.${id},user2_id.eq.${id}`)
     .or('user1_action.eq.like,user1_action.eq.super_like,user2_action.eq.like,user2_action.eq.super_like');
-
+console.log ({likesReceived});
   // Get total matches
   const { count: totalMatches } = await supabaseAdmin
     .from('matches')
     .select('*', { count: 'exact', head: true })
     .or(`user1_id.eq.${id},user2_id.eq.${id}`)
     .eq('is_mutual_match', true);
-
+console.log ({totalMatches});
   // Get endorsements
   const { count: endorsements } = await supabaseAdmin
     .from('endorsements')
     .select('*', { count: 'exact', head: true })
     .eq('endorsed_id', id);
-
+console.log ({endorsements});
   // Get total messages sent/received
   const { count: messagesSent } = await supabaseAdmin
     .from('messages')
     .select('*', { count: 'exact', head: true })
     .eq('sender_id', id);
-
+console.log ({messagesSent});
   const { count: messagesReceived } = await supabaseAdmin
     .from('messages')
     .select('*', { count: 'exact', head: true })
