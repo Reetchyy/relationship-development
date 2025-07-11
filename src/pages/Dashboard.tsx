@@ -351,20 +351,26 @@ export default function Dashboard() {
               <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
               
               <div className="space-y-3">
-                <button className="w-full p-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center">
+                <button 
                   onClick={handleDiscoverMatches}
+                  className="w-full p-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center"
+                >
                   <Heart className="w-4 h-4 mr-2" />
                   Discover Matches
                 </button>
                 
-                <button className="w-full p-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors flex items-center justify-center">
+                <button 
                   onClick={handleViewMessages}
+                  className="w-full p-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors flex items-center justify-center"
+                >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   View Messages
                 </button>
                 
-                <button className="w-full p-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors flex items-center justify-center">
+                <button 
                   onClick={handleViewCommunity}
+                  className="w-full p-3 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors flex items-center justify-center"
+                >
                   <Users className="w-4 h-4 mr-2" />
                   Community
                 </button>
