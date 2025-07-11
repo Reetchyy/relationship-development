@@ -78,191 +78,6 @@ router.get('/', authenticateToken, asyncHandler(async (req, res) => {
 }));
 
 /**
- * @route   GET /api/profiles/:id/stats
- * @desc    Get profile statistics
- * @access  Private (own profile only)
- */
-router.get('/:id/stats', authenticateToken, asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  if (id !== req.user.id) {
-    return res.status(403).json({
-      error: 'You can only view your own stats',
-      code: 'UNAUTHORIZED_ACCESS'
-    });
-  }
-
-  // Get profile views
-  const { count: profileViews } = await supabaseAdmin
-    .from('user_activities')
-    .select('*', { count: 'exact', head: true })
-    .eq('target_user_id', id)
-    .eq('activity_type', 'profile_view');
-
-  // Get likes received
-  const { count: likesReceived } = await supabaseAdmin
-    .from('matches')
-    .select('*', { count: 'exact', head: true })
-    .or(`user1_id.eq.${id},user2_id.eq.${id}`)
-    .or('user1_action.eq.like,user1_action.eq.super_like,user2_action.eq.like,user2_action.eq.super_like');
-
-  // Get total matches
-  const { count: totalMatches } = await supabaseAdmin
-    .from('matches')
-    .select('*', { count: 'exact', head: true })
-    .or(`user1_id.eq.${id},user2_id.eq.${id}`)
-    .eq('is_mutual_match', true);
-
-  // Get endorsements
-  const { count: endorsements } = await supabaseAdmin
-    .from('endorsements')
-    .select('*', { count: 'exact', head: true })
-    .eq('endorsed_id', id);
-
-  // Get total messages sent/received
-  const { count: messagesSent } = await supabaseAdmin
-    .from('messages')
-    .select('*', { count: 'exact', head: true })
-    .eq('sender_id', id);
-
-  // First get conversation IDs where user is a participant
-  const { data: conversations } = await supabaseAdmin
-    .from('conversations')
-    .select('id')
-    .or(`user1_id.eq.${id},user2_id.eq.${id}`);
-
-  const conversationIds = conversations ? conversations.map(conv => conv.id) : [];
-  
-  let messagesReceived = 0;
-  if (conversationIds.length > 0) {
-    const { count } = await supabaseAdmin
-      .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .neq('sender_id', id)
-      .in('conversation_id', conversationIds);
-    
-    messagesReceived = count || 0;
-  }
-
-  res.json({
-    stats: {
-      profile_views: profileViews || 0,
-      likes_received: likesReceived || 0,
-      matches: totalMatches || 0,
-      messages: (messagesSent || 0) + messagesReceived,
-      endorsements: endorsements || 0
-    }
-  });
-}));
-
-/**
- * @route   GET /api/profiles/:id/activities
- * @desc    Get user's recent activities
- * @access  Private (own activities only)
- */
-router.get('/:id/activities', authenticateToken, asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { limit = 10 } = req.query;
-
-  if (id !== req.user.id) {
-    return res.status(403).json({
-      error: 'You can only view your own activities',
-      code: 'UNAUTHORIZED_ACCESS'
-    });
-  }
-
-  const { data: activities, error } = await supabaseAdmin
-    .from('user_activities')
-    .select(`
-      *,
-      target_user:profiles!user_activities_target_user_id_fkey(
-        id, first_name, last_name, profile_photo_url
-      )
-    `)
-    .eq('user_id', id)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    return res.status(500).json({
-      error: 'Failed to fetch activities',
-      code: 'FETCH_ERROR'
-    });
-  }
-
-  res.json({
-    activities: activities || []
-  });
-}));
-
-/**
- * @route   POST /api/profiles/:id/cultural-background
- * @desc    Create or update cultural background
- * @access  Private (own profile only)
- */
-router.post('/:id/cultural-background',
-  authenticateToken,
-  validate(schemas.culturalBackground),
-  asyncHandler(async (req, res) => {
-    const { id } = req.params;
-
-    if (id !== req.user.id) {
-      return res.status(403).json({
-        error: 'You can only update your own cultural background',
-        code: 'UNAUTHORIZED_UPDATE'
-      });
-    }
-
-    // Check if cultural background exists
-    const { data: existing } = await supabaseAdmin
-      .from('cultural_backgrounds')
-      .select('id')
-      .eq('user_id', id)
-      .single();
-
-    let result;
-    if (existing) {
-      // Update existing
-      const { data, error } = await supabaseAdmin
-        .from('cultural_backgrounds')
-        .update({
-          ...req.body,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', id)
-        .select()
-        .single();
-      
-      result = { data, error };
-    } else {
-      // Create new
-      const { data, error } = await supabaseAdmin
-        .from('cultural_backgrounds')
-        .insert({
-          user_id: id,
-          ...req.body
-        })
-        .select()
-        .single();
-      
-      result = { data, error };
-    }
-
-    if (result.error) {
-      return res.status(500).json({
-        error: 'Failed to save cultural background',
-        code: 'SAVE_ERROR'
-      });
-    }
-
-    res.json({
-      message: 'Cultural background saved successfully',
-      cultural_background: result.data
-    });
-  })
-);
-
-/**
  * @route   GET /api/profiles/:id
  * @desc    Get profile by ID
  * @access  Private
@@ -411,5 +226,115 @@ router.post('/:id/cultural-background',
     });
   })
 );
+
+/**
+ * @route   GET /api/profiles/:id/stats
+ * @desc    Get profile statistics
+ * @access  Private (own profile only)
+ */
+router.get('/:id/stats', authenticateToken, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (id !== req.user.id) {
+    return res.status(403).json({
+      error: 'You can only view your own stats',
+      code: 'UNAUTHORIZED_ACCESS'
+    });
+  }
+
+  // Get profile views
+  const { count: profileViews } = await supabaseAdmin
+    .from('user_activities')
+    .select('*', { count: 'exact', head: true })
+    .eq('target_user_id', id)
+    .eq('activity_type', 'profile_view');
+
+  // Get likes received
+  const { count: likesReceived } = await supabaseAdmin
+    .from('matches')
+    .select('*', { count: 'exact', head: true })
+    .or(`user1_id.eq.${id},user2_id.eq.${id}`)
+    .or('user1_action.eq.like,user1_action.eq.super_like,user2_action.eq.like,user2_action.eq.super_like');
+
+  // Get total matches
+  const { count: totalMatches } = await supabaseAdmin
+    .from('matches')
+    .select('*', { count: 'exact', head: true })
+    .or(`user1_id.eq.${id},user2_id.eq.${id}`)
+    .eq('is_mutual_match', true);
+
+  // Get endorsements
+  const { count: endorsements } = await supabaseAdmin
+    .from('endorsements')
+    .select('*', { count: 'exact', head: true })
+    .eq('endorsed_id', id);
+
+  // Get total messages sent/received
+  const { count: messagesSent } = await supabaseAdmin
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('sender_id', id);
+
+  const { count: messagesReceived } = await supabaseAdmin
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .neq('sender_id', id)
+    .in('conversation_id', 
+      supabaseAdmin
+        .from('conversations')
+        .select('id')
+        .or(`user1_id.eq.${id},user2_id.eq.${id}`)
+    );
+
+  res.json({
+    stats: {
+      profile_views: profileViews || 0,
+      likes_received: likesReceived || 0,
+      matches: totalMatches || 0,
+      messages: (messagesSent || 0) + (messagesReceived || 0),
+      endorsements: endorsements || 0
+    }
+  });
+}));
+
+/**
+ * @route   GET /api/profiles/:id/activities
+ * @desc    Get user's recent activities
+ * @access  Private (own activities only)
+ */
+router.get('/:id/activities', authenticateToken, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { limit = 10 } = req.query;
+
+  if (id !== req.user.id) {
+    return res.status(403).json({
+      error: 'You can only view your own activities',
+      code: 'UNAUTHORIZED_ACCESS'
+    });
+  }
+
+  const { data: activities, error } = await supabaseAdmin
+    .from('user_activities')
+    .select(`
+      *,
+      target_user:profiles!user_activities_target_user_id_fkey(
+        id, first_name, last_name, profile_photo_url
+      )
+    `)
+    .eq('user_id', id)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    return res.status(500).json({
+      error: 'Failed to fetch activities',
+      code: 'FETCH_ERROR'
+    });
+  }
+
+  res.json({
+    activities: activities || []
+  });
+}));
 
 export default router;

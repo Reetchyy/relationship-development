@@ -5,8 +5,8 @@ dotenv.config();
 
 // Validate required environment variables
 const requiredEnvVars = [
-  'SUPABASE_URL',
-  'SUPABASE_ANON_KEY',
+  'VITE_SUPABASE_URL',
+  'VITE_SUPABASE_ANON_KEY',
   'SUPABASE_SERVICE_ROLE_KEY'
 ];
 
@@ -18,8 +18,8 @@ for (const envVar of requiredEnvVars) {
 
 // Client for user operations (with RLS)
 export const supabaseClient = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
+  process.env.VITE_SUPABASE_URL,
+  process.env.VITE_SUPABASE_ANON_KEY,
   {
     auth: {
       autoRefreshToken: true,
@@ -30,7 +30,7 @@ export const supabaseClient = createClient(
 
 // Admin client for server operations (bypasses RLS)
 export const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
+  process.env.VITE_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   {
     auth: {
@@ -43,8 +43,8 @@ export const supabaseAdmin = createClient(
 // Helper function to get authenticated client
 export const getAuthenticatedClient = (accessToken) => {
   const client = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_ANON_KEY
+    process.env.VITE_SUPABASE_URL,
+    process.env.VITE_SUPABASE_ANON_KEY
   );
   
   if (accessToken) {

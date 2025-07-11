@@ -83,9 +83,6 @@ class ApiService {
     password: string;
     firstName: string;
     lastName: string;
-    dateOfBirth?: string;
-    gender?: string;
-    location?: string;
   }) {
     return this.request<ApiResponse>('/auth/register', {
       method: 'POST',
