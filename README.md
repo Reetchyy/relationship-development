@@ -1,6 +1,6 @@
-# African Relationship Development Platform
+# ReDPlAD - African Relationship Development Platform
 
-A modern relationship development platform built with React, Node.js, and Supabase.
+ReDPlAD is a modern relationship development platform built with React, Node.js, and Supabase.
 
 ## 🚀 Quick Start
 
@@ -13,8 +13,8 @@ A modern relationship development platform built with React, Node.js, and Supaba
 
 1. **Clone the repository**
    ```bash
-   git clone <your-repo-url>
-   cd relationship-development
+   git clone <your-redplad-repo-url>
+   cd redplad
    ```
 
 2. **Install dependencies**
@@ -78,7 +78,7 @@ This application uses a **hybrid deployment strategy**:
 ## 📁 Project Structure
 
 ```
-relationship-development/
+redplad/
 ├── src/                 # React frontend
 ├── server/             # Node.js backend
 ├── supabase/           # Database migrations

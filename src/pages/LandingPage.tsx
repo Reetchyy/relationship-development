@@ -72,9 +72,9 @@ export default function LandingPage() {
             >
               <div className="flex items-center space-x-2 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">DC</span>
+                  <span className="text-white font-bold text-xl">RP</span>
                 </div>
-                <span className="text-white font-bold text-2xl">Diaspora Connect</span>
+                <span className="text-white font-bold text-2xl">ReDPlAD</span>
               </div>
               
               <h1 className="text-5xl lg:text-6xl font-bold text-white mb-6">
@@ -86,7 +86,7 @@ export default function LandingPage() {
               
               <p className="text-xl text-slate-300 mb-8 leading-relaxed">
                 Connect with culturally compatible partners in the African diaspora. 
-                Our AI-powered platform respects traditional values while embracing modern connections.
+                ReDPlAD's AI-powered platform respects traditional values while embracing modern connections.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
@@ -158,7 +158,7 @@ export default function LandingPage() {
               Built for the African Diaspora
             </h2>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-              Our platform understands the unique challenges of finding love while preserving cultural identity.
+              ReDPlAD understands the unique challenges of finding love while preserving cultural identity.
             </p>
           </motion.div>
           
@@ -237,7 +237,7 @@ export default function LandingPage() {
               Ready to Find Your Cultural Match?
             </h2>
             <p className="text-xl text-primary-100 mb-8">
-              Join thousands of Africans in the diaspora who have found meaningful connections.
+              Join thousands of Africans in the diaspora who have found meaningful connections through ReDPlAD.
             </p>
             <Link
               to="/register"

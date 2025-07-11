@@ -19,9 +19,9 @@ export default function Layout({ children }: LayoutProps) {
           <header className="md:hidden bg-slate-800/90 backdrop-blur-sm border-b border-slate-700 px-4 py-3 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">DC</span>
+                <span className="text-white font-bold text-sm">RP</span>
               </div>
-              <span className="text-white font-bold">Diaspora Connect</span>
+              <span className="text-white font-bold">ReDPlAD</span>
             </div>
             <button
               onClick={logout}

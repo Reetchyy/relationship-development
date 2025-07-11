@@ -34,9 +34,9 @@ export default function Navigation() {
         <div className="hidden md:block p-6 border-b border-slate-700">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">DC</span>
+              <span className="text-white font-bold text-lg">RP</span>
             </div>
-            <span className="text-white font-bold text-xl">Diaspora Connect</span>
+            <span className="text-white font-bold text-xl">ReDPlAD</span>
           </div>
         </div>
 
