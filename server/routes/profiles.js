@@ -318,7 +318,7 @@ catch (error){console.log ({error})}
  * @desc    Get user's recent activities
  * @access  Private (own activities only)
  */
-router.get('//activities', authenticateToken, asyncHandler(async (req, res) => {
+router.get('/:id/activities', authenticateToken, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { limit = 10 } = req.query;
 

@@ -176,8 +176,14 @@ class ApiService {
 
   // User activity endpoints
   async getUserActivities(limit?: number) {
+    // Get current user ID from token or make a separate call
+    const userResponse = await this.getCurrentUser();
+    if (!userResponse.user?.id) {
+      throw new Error('User not authenticated');
+    }
+    
     const params = limit ? `?limit=${limit}` : '';
-    return this.request<ApiResponse>(`/user/activities${params}`);
+    return this.request<ApiResponse>(`/profiles/${userResponse.user.id}/activities${params}`);
   }
 
   // Match endpoints
