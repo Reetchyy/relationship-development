@@ -13,7 +13,8 @@ import {
   Mic,
   Heart,
   CheckCheck,
-  Check
+  Check,
+  MessageSquare
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { format } from 'date-fns';
