@@ -729,7 +729,6 @@ export default function Registration() {
             ) : (
               <button
                 onClick={handleSubmit}
-                {/* disabled={uploadingFiles} */}
                 className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                Complete Registration
