@@ -18,5 +18,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/" replace />;
   }
 
+  // Ensure we have basic profile data before showing protected content
+  if (!state.profile?.first_name || !state.profile?.last_name) {
+    return <LoadingSpinner />;
+  }
   return <>{children}</>;
 }

@@ -24,7 +24,6 @@ export default function Profile() {
 
   // Provide fallback values if profile data is not available
   const displayName = profile ? `${profile.first_name} ${profile.last_name}` : 'User';
-  const profilePhoto = profile?.profile_photo_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400';
   const tribe = profile?.cultural_backgrounds?.[0]?.primary_tribe || 'Not specified';
   const location = profile ? `${profile.location_city}, ${profile.location_country}` : 'Location not set';
   const bio = profile?.bio || 'No bio available yet. Click edit to add your story.';

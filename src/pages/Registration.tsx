@@ -18,7 +18,6 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadService } from '../services/uploadService';
-import InitialsAvatar from '../components/InitialsAvatar';
 
 interface FormData {
   firstName: string;
