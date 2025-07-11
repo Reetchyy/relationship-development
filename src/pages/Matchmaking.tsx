@@ -13,7 +13,6 @@ import {
   Clock
 } from 'lucide-react';
 import Layout from '../components/Layout';
-import InitialsAvatar from '../components/InitialsAvatar';
 
 interface Match {
   id: string;
@@ -196,14 +195,11 @@ export default function Matchmaking() {
           >
             {/* Hero Image */}
             <div className="relative h-96 md:h-[500px]">
-              <div className="w-full h-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
-                <InitialsAvatar
-                  firstName={currentMatch.name.split(' ')[0]}
-                  lastName={currentMatch.name.split(' ')[1] || ''}
-                  size="2xl"
-                  className="scale-150"
-                />
-              </div>
+              <img
+                src={currentMatch.avatar}
+                alt={currentMatch.name}
+                className="w-full h-full object-cover"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
               
               {/* Verification Badge */}

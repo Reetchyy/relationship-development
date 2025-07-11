@@ -169,11 +169,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('📝 Starting user registration...');
       
-      const loginResponse = await apiService.register(userData);
+      // Register the user with the provided password
+      const registerResponse = await apiService.register({
+        email: userData.email,
+        password: userData.password,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+      });
+      
+      console.log('✅ User registered, logging in...');
+      
+      // Then immediately log them in to get the access token
+      const loginResponse = await apiService.login({
+        email: userData.email,
+        password: userData.password
+      });
+      
+      console.log('✅ User logged in, updating profile...');
       
       if (loginResponse.user && loginResponse.profile) {
-        // Skip file uploads for now - using initials avatars
-        console.log('📸 Using initials avatar instead of file uploads');
+        // Update the profile with additional information
+        await apiService.updateProfile(loginResponse.user.id, {
+          date_of_birth: userData.dateOfBirth,
+          gender: userData.gender,
+          location_city: userData.location.split(',')[0]?.trim() || 'Unknown',
+          location_country: userData.location.split(',')[1]?.trim() || 'Unknown',
+          occupation: userData.occupation,
+          education_level: userData.education,
+          bio: userData.bio,
+        });
+
+        console.log('✅ Profile updated, setting cultural background...');
+        
+        // Create cultural background if provided
+        if (userData.tribe || userData.languages?.length > 0) {
+          await apiService.updateCulturalBackground(loginResponse.user.id, {
+            primary_tribe: userData.tribe,
+            languages_spoken: userData.languages,
+            religion: userData.religion,
+            birth_country: userData.location.split(',')[1]?.trim() || 'Unknown',
+          });
+        }
 
         console.log('✅ Registration process complete, setting auth state...');
         

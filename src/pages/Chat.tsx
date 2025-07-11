@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { format } from 'date-fns';
-import InitialsAvatar from '../components/InitialsAvatar';
 
 interface ChatUser {
   id: string;
@@ -215,10 +214,10 @@ export default function Chat() {
               >
                 <div className="flex items-center space-x-3">
                   <div className="relative">
-                    <InitialsAvatar
-                      firstName={user.name.split(' ')[0]}
-                      lastName={user.name.split(' ')[1] || ''}
-                      size="md"
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="w-12 h-12 rounded-full object-cover"
                     />
                     {user.isOnline && (
                       <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-800"></div>
@@ -262,10 +261,10 @@ export default function Chat() {
             <div className="p-4 border-b border-slate-700 flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="relative">
-                  <InitialsAvatar
-                    firstName={selectedUser.name.split(' ')[0]}
-                    lastName={selectedUser.name.split(' ')[1] || ''}
-                    size="md"
+                  <img
+                    src={selectedUser.avatar}
+                    alt={selectedUser.name}
+                    className="w-10 h-10 rounded-full object-cover"
                   />
                   {selectedUser.isOnline && (
                     <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-800"></div>

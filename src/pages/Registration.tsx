@@ -18,7 +18,6 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
 import { uploadService } from '../services/uploadService';
-import InitialsAvatar from '../components/InitialsAvatar';
 
 interface FormData {
   firstName: string;
@@ -546,18 +545,29 @@ export default function Registration() {
                   Profile Photo *
                 </label>
                 <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
-                  <div className="text-center">
-                    <div className="mb-4">
-                      <InitialsAvatar
-                        firstName={formData.firstName || 'Y'}
-                        lastName={formData.lastName || 'N'}
-                        size="xl"
-                        className="mx-auto"
-                      />
-                    </div>
-                    <p className="text-slate-300 mb-2">Your profile picture will use your initials</p>
-                    <p className="text-slate-400 text-sm">We'll add photo upload functionality soon!</p>
-                  </div>
+                  <Camera className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+                  <p className="text-slate-400 mb-2">Upload a clear photo of yourself</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => e.target.files?.[0] && handleFileUpload('profilePhoto', e.target.files[0])}
+                    className="hidden"
+                    id="profile-photo"
+                    required
+                  />
+                  <label
+                    htmlFor="profile-photo"
+                    className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Photo
+                  </label>
+                  {formData.profilePhoto && (
+                    <p className="text-green-400 mt-2 flex items-center justify-center">
+                      <Check className="w-4 h-4 mr-1" />
+                      Photo uploaded: {formData.profilePhoto.name}
+                    </p>
+                  )}
                 </div>
               </div>
 

@@ -12,7 +12,6 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
-import InitialsAvatar from '../components/InitialsAvatar';
 
 interface MatchSuggestion {
   id: string;
@@ -126,11 +125,10 @@ export default function Dashboard() {
           className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-6 text-white"
         >
           <div className="flex items-center space-x-4">
-            <InitialsAvatar
-              firstName={profile?.first_name || 'U'}
-              lastName={profile?.last_name || 'ser'}
-              size="xl"
-              className="border-4 border-white/20"
+            <img
+              src={profilePhoto}
+              alt={displayName}
+              className="w-16 h-16 rounded-full border-4 border-white/20 object-cover"
             />
             <div>
               <h1 className="text-2xl font-bold">Welcome back, {firstName}!</h1>

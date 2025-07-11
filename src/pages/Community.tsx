@@ -16,7 +16,6 @@ import {
   Clock
 } from 'lucide-react';
 import Layout from '../components/Layout';
-import InitialsAvatar from '../components/InitialsAvatar';
 
 interface CommunityMember {
   id: string;
@@ -248,10 +247,10 @@ export default function Community() {
                   >
                     <div className="flex items-center space-x-3 mb-4">
                       <div className="relative">
-                        <InitialsAvatar
-                          firstName={member.name.split(' ')[0]}
-                          lastName={member.name.split(' ')[1] || ''}
-                          size="md"
+                        <img
+                          src={member.avatar}
+                          alt={member.name}
+                          className="w-12 h-12 rounded-full object-cover"
                         />
                         {member.isOnline && (
                           <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-700"></div>
@@ -310,10 +309,10 @@ export default function Community() {
                   className="bg-slate-700/50 rounded-lg p-6"
                 >
                   <div className="flex items-start space-x-4">
-                    <InitialsAvatar
-                      firstName={endorsement.endorser.name.split(' ')[0]}
-                      lastName={endorsement.endorser.name.split(' ')[1] || ''}
-                      size="md"
+                    <img
+                      src={endorsement.endorser.avatar}
+                      alt={endorsement.endorser.name}
+                      className="w-12 h-12 rounded-full object-cover"
                     />
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
@@ -392,10 +391,10 @@ export default function Community() {
                       
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                          <InitialsAvatar
-                            firstName={event.organizer.name.split(' ')[0]}
-                            lastName={event.organizer.name.split(' ')[1] || ''}
-                            size="sm"
+                          <img
+                            src={event.organizer.avatar}
+                            alt={event.organizer.name}
+                            className="w-6 h-6 rounded-full object-cover"
                           />
                           <span className="text-sm text-slate-400">
                             Organized by {event.organizer.name}
