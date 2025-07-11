@@ -242,7 +242,8 @@ router.get('/:id/stats', authenticateToken, asyncHandler(async (req, res) => {
     });
   }
 
-  // Get profile views
+  try{
+     // Get profile views
   const { count: profileViews } = await supabaseAdmin
     .from('user_activities')
     .select('*', { count: 'exact', head: true })
@@ -295,6 +296,9 @@ console.log ({messagesSent});
       endorsements: endorsements || 0
     }
   });
+  }
+catch (error){console.log ({error})}
+ 
 }));
 
 /**
