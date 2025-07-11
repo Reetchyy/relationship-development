@@ -10,6 +10,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import InitialsAvatar from './InitialsAvatar';
 
 export default function Navigation() {
   const location = useLocation();
@@ -33,9 +34,12 @@ export default function Navigation() {
         {/* Logo for desktop */}
         <div className="hidden md:block p-6 border-b border-slate-700">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">DC</span>
-            </div>
+            <InitialsAvatar
+              firstName="Diaspora"
+              lastName="Connect"
+              size="md"
+              className="bg-gradient-to-br from-primary-400 to-primary-600"
+            />
             <span className="text-white font-bold text-xl">Diaspora Connect</span>
           </div>
         </div>

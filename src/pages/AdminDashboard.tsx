@@ -16,6 +16,7 @@ import {
   MoreVertical
 } from 'lucide-react';
 import Layout from '../components/Layout';
+import InitialsAvatar from '../components/InitialsAvatar';
 
 interface UserReport {
   id: string;
@@ -261,10 +262,10 @@ export default function AdminDashboard() {
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center space-x-4">
-                          <img
-                            src={report.reportedUser.avatar}
-                            alt={report.reportedUser.name}
-                            className="w-12 h-12 rounded-full object-cover"
+                          <InitialsAvatar
+                            firstName={report.reportedUser.name.split(' ')[0]}
+                            lastName={report.reportedUser.name.split(' ')[1] || ''}
+                            size="md"
                           />
                           <div>
                             <h3 className="font-semibold text-white">{report.reportedUser.name}</h3>

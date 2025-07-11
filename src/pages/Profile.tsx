@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
+import InitialsAvatar from '../components/InitialsAvatar';
 
 export default function Profile() {
   const { state } = useAuth();
@@ -110,10 +111,11 @@ export default function Profile() {
         >
           <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6">
             <div className="relative">
-              <img
-                src={profilePhoto}
-                alt={displayName}
-                className="w-32 h-32 rounded-full object-cover border-4 border-primary-500"
+              <InitialsAvatar
+                firstName={profile?.first_name || 'U'}
+                lastName={profile?.last_name || 'ser'}
+                size="2xl"
+                className="border-4 border-primary-500"
               />
               <button className="absolute bottom-0 right-0 w-10 h-10 bg-primary-600 rounded-full flex items-center justify-center text-white hover:bg-primary-700 transition-colors">
                 <Camera className="w-5 h-5" />
