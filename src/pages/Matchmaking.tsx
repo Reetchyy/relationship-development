@@ -10,11 +10,9 @@ import {
   Info,
   Sparkles,
   Users,
-  Clock,
-  Shield
+  Clock
 } from 'lucide-react';
 import Layout from '../components/Layout';
-import { Link } from 'react-router-dom';
 
 interface Match {
   id: string;

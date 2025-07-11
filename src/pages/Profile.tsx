@@ -11,26 +11,14 @@ import {
   Camera,
   Shield,
   Star,
-  Languages,
-  Upload,
-  Check,
-  AlertCircle,
-  FileText,
-  Video
+  Languages
 } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useAuth } from '../contexts/AuthContext';
-import { uploadService } from '../services/uploadService';
-import toast from 'react-hot-toast';
 
 export default function Profile() {
   const { state } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [showVerification, setShowVerification] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingDocument, setUploadingDocument] = useState(false);
-  const [uploadingVideo, setUploadingVideo] = useState(false);
-  const [documents, setDocuments] = useState<any[]>([]);
   const { user, profile } = state;
 
   // Provide fallback values if profile data is not available
@@ -91,10 +79,10 @@ export default function Profile() {
 
   const verificationStatus = [
     { type: 'Email', verified: !!user?.email },
-    { type: 'Profile Photo', verified: !!profile?.profile_photo_url },
-    { type: 'ID Document', verified: documents.some(doc => doc.document_type === 'government_id' && doc.verification_status === 'approved') },
+    { type: 'Phone', verified: false },
+    { type: 'ID Document', verified: false },
     { type: 'Cultural Quiz', verified: isVerified },
-    { type: 'Video Verification', verified: documents.some(doc => doc.document_type === 'video_selfie' && doc.verification_status === 'approved') },
+    { type: 'Community Endorsement', verified: false },
   ];
 
   // Helper function to calculate age
@@ -110,77 +98,6 @@ export default function Profile() {
     
     return age.toString();
   }
-
-  // Load user documents on component mount
-  React.useEffect(() => {
-    const loadDocuments = async () => {
-      try {
-        const userDocuments = await uploadService.getDocuments();
-        setDocuments(userDocuments);
-      } catch (error) {
-        console.error('Failed to load documents:', error);
-      }
-    };
-
-    if (user) {
-      loadDocuments();
-    }
-  }, [user]);
-
-  const handleProfilePhotoUpload = async (file: File) => {
-    try {
-      setUploadingPhoto(true);
-      await uploadService.uploadProfilePhoto(file);
-      toast.success('Profile photo uploaded successfully!');
-      // Refresh the page or update the profile photo URL
-      window.location.reload();
-    } catch (error: any) {
-      toast.error(`Upload failed: ${error.message}`);
-    } finally {
-      setUploadingPhoto(false);
-    }
-  };
-
-  const handleDocumentUpload = async (file: File, documentType: string) => {
-    try {
-      setUploadingDocument(true);
-      await uploadService.uploadDocument(file, documentType);
-      toast.success('Document uploaded successfully! It will be reviewed for verification.');
-      // Reload documents
-      const userDocuments = await uploadService.getDocuments();
-      setDocuments(userDocuments);
-    } catch (error: any) {
-      toast.error(`Upload failed: ${error.message}`);
-    } finally {
-      setUploadingDocument(false);
-    }
-  };
-
-  const handleVideoUpload = async (file: File) => {
-    try {
-      setUploadingVideo(true);
-      await uploadService.uploadVideo(file, 'video_selfie');
-      toast.success('Video uploaded successfully! It will be reviewed for verification.');
-      // Reload documents
-      const userDocuments = await uploadService.getDocuments();
-      setDocuments(userDocuments);
-    } catch (error: any) {
-      toast.error(`Upload failed: ${error.message}`);
-    } finally {
-      setUploadingVideo(false);
-    }
-  };
-
-  const getVerificationScore = () => {
-    const verified = verificationStatus.filter(item => item.verified).length;
-    return Math.round((verified / verificationStatus.length) * 100);
-  };
-
-  const isEligibleForMatching = () => {
-    return profile?.profile_photo_url && 
-           documents.some(doc => doc.document_type === 'government_id') && 
-           isVerified;
-  };
 
   return (
     <Layout>
@@ -234,12 +151,9 @@ export default function Profile() {
                   <Edit3 className="w-4 h-4 mr-2" />
                   Edit Profile
                 </button>
-                <button 
-                  onClick={() => setShowVerification(!showVerification)}
-                  className="flex items-center justify-center px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <Shield className="w-4 h-4 mr-2" />
-                  Verify Profile
+                <button className="flex items-center justify-center px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors">
+                  <Star className="w-4 h-4 mr-2" />
+                  Get Endorsement
                 </button>
               </div>
             </div>
@@ -340,7 +254,7 @@ export default function Profile() {
                 <div className="flex items-center justify-between">
                   <span className="text-white font-medium">Verification Score</span>
                   <span className="text-green-400 font-bold">
-                    {getVerificationScore()}%
+                    {Math.round((verificationStatus.filter(item => item.verified).length / verificationStatus.length) * 100)}%
                   </span>
                 </div>
               </div>

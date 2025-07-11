@@ -43,7 +43,8 @@ interface FormData {
 const steps = [
   { id: 1, title: 'Basic Information', description: 'Tell us about yourself' },
   { id: 2, title: 'Cultural Background', description: 'Share your heritage' },
-  { id: 3, title: 'Complete Profile', description: 'Final touches' },
+  { id: 3, title: 'Verification', description: 'Verify your identity' },
+  { id: 4, title: 'Complete Profile', description: 'Final touches' },
 ];
 
 const tribes = [
@@ -60,6 +61,7 @@ export default function Registration() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -78,7 +80,7 @@ export default function Registration() {
     bio: '',
     profilePhoto: null,
     idDocument: null,
-    videoSelfie: null
+    videoSelfie: null,
   });
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
@@ -151,6 +153,12 @@ export default function Registration() {
         }
         return true;
       case 3:
+        if (!formData.profilePhoto) {
+          toast.error('Please upload a profile photo');
+          return false;
+        }
+        return true;
+      case 4:
         if (!formData.bio.trim()) {
           toast.error('Bio is required');
           return false;
@@ -185,13 +193,59 @@ export default function Registration() {
     }
 
     try {
+      setUploadingFiles(true);
+      
       console.log('🚀 Starting registration process...');
       
-      // Complete registration with the form data
+      // Complete registration with the form data including password
       await completeRegistration(formData);
       
-      toast.success('Registration completed successfully! Please complete your profile verification and take the cultural quiz.');
-      navigate('/profile');
+      console.log('✅ Registration completed, starting file uploads...');
+      
+      // Small delay to ensure session is properly established
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Upload files after successful registration
+      if (formData.profilePhoto) {
+        try {
+          console.log('📸 Uploading profile photo...');
+          await uploadService.uploadProfilePhoto(formData.profilePhoto);
+          toast.success('Profile photo uploaded successfully');
+        } catch (error: any) {
+          console.error('Profile photo upload failed:', error);
+          // Don't show auth errors to user, they're likely temporary
+          if (error.message?.includes('authentication') || error.message?.includes('token')) {
+            toast.error('Profile photo upload failed. You can upload it later from your profile.');
+          } else {
+            toast.error(`Profile photo upload failed: ${error.message}`);
+          }
+        }
+      }
+      
+      if (formData.idDocument) {
+        try {
+          console.log('📄 Uploading ID document...');
+          await uploadService.uploadDocument(formData.idDocument, 'government_id');
+          toast.success('Identity document uploaded successfully');
+        } catch (error: any) {
+          console.error('Document upload failed:', error);
+          toast.error(`Document upload failed: ${error.message}`);
+        }
+      }
+      
+      if (formData.videoSelfie) {
+        try {
+          console.log('🎥 Uploading video selfie...');
+          await uploadService.uploadVideo(formData.videoSelfie, 'video_selfie');
+          toast.success('Video selfie uploaded successfully');
+        } catch (error: any) {
+          console.error('Video upload failed:', error);
+          toast.error(`Video upload failed: ${error.message}`);
+        }
+      }
+      
+      toast.success('Registration completed successfully! Please take the cultural quiz to verify your profile.');
+      navigate('/cultural-quiz');
     } catch (error: any) {
       console.error('Registration error:', error);
       
@@ -675,9 +729,10 @@ export default function Registration() {
             ) : (
               <button
                 onClick={handleSubmit}
+                disabled={uploadingFiles}
                 className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Complete Registration
+                {uploadingFiles ? 'Uploading Files...' : 'Complete Registration'}
                 <Check className="w-5 h-5 ml-2" />
               </button>
             )}

@@ -161,7 +161,7 @@ export default function CulturalQuiz() {
         await checkAuthStatus();
         
         toast.success('Congratulations! You passed the cultural quiz and your profile is now verified.');
-        navigate('/profile');
+        navigate('/dashboard');
       } else {
         toast.error('Please retake the quiz to continue. You need at least 60% to pass.');
         // Reset quiz
