@@ -340,7 +340,7 @@ export default function Profile() {
                 <div className="flex items-center justify-between">
                   <span className="text-white font-medium">Verification Score</span>
                   <span className="text-green-400 font-bold">
-                    {Math.round((verificationStatus.filter(item => item.verified).length / verificationStatus.length) * 100)}%
+                    {getVerificationScore()}%
                   </span>
                 </div>
               </div>
