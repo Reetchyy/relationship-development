@@ -290,11 +290,12 @@ export default function Dashboard() {
                 </div>
               )}
               
-                onClick={handleDiscoverMatches}
-                className="w-full mt-4 py-2 text-primary-400 hover:text-primary-300 font-medium transition-colors"
-              >
-                View All Matches
-              </button>
+            <button
+              onClick={handleDiscoverMatches}
+              className="w-full mt-4 py-2 text-primary-400 hover:text-primary-300 font-medium transition-colors"
+            >
+              View All Matches
+            </button>
             </motion.div>
           </div>
 
