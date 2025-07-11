@@ -223,14 +223,24 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
     };
   });
 
-router.post('/:targetUserId/action', authenticateToken, asyncHandler(async (req, res) => {
-  const { targetUserId } = req.params;
+  const topMatches = scoredMatches
     .sort((a, b) => b.compatibility_scores.overall - a.compatibility_scores.overall)
     .slice(0, limit);
 
-    return res.status(400).json({
+  res.json({
     suggestions: topMatches,
     total: topMatches.length
+  });
+}));
+
+router.post('/:targetUserId/action', authenticateToken, asyncHandler(async (req, res) => {
+  const { targetUserId } = req.params;
+  const { action } = req.body;
+
+  if (!['like', 'pass'].includes(action)) {
+    return res.status(400).json({
+      error: 'Invalid action',
+      code: 'INVALID_ACTION'
     });
   }
 
@@ -333,4 +343,3 @@ router.post('/:targetUserId/action', authenticateToken, asyncHandler(async (req,
 }));
 
 export default router;
- * @route   POST /api/matches/:targetUserId/action
