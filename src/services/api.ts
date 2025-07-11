@@ -172,6 +172,12 @@ class ApiService {
     return this.request<ApiResponse>(`/profiles/${id}/stats`);
   }
 
+  // User activity endpoints
+  async getUserActivities(limit?: number) {
+    const params = limit ? `?limit=${limit}` : '';
+    return this.request<ApiResponse>(`/user/activities${params}`);
+  }
+
   // Match endpoints
   async getMatches(params?: {
     status?: 'all' | 'mutual' | 'pending';

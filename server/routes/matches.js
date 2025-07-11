@@ -76,23 +76,11 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
 
   // Get user's preferences
-  const { data: preferences } = await supabaseAdmin
-    .from('user_preferences')
-    .select('*')
-    .eq('user_id', req.user.id)
-    .single();
-
-  // Get user's cultural background
-  const { data: userCulture } = await supabaseAdmin
-    .from('cultural_backgrounds')
-    .select('*')
-    .eq('user_id', req.user.id)
-    .single();
-
-  // Get user's profile for age calculation
   const { data: userProfile } = await supabaseAdmin
+    .from('user_preferences')
     .from('profiles')
-    .select('date_of_birth, gender, location_country')
+    .select('*')
+    .eq('user_id', req.user.id)
     .eq('id', req.user.id)
     .single();
 
@@ -102,6 +90,19 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
       code: 'PROFILE_NOT_FOUND'
     });
   }
+
+  // Get user's preferences and cultural background
+  const { data: preferences } = await supabaseAdmin
+    .from('user_preferences')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .single();
+
+  const { data: userCulture } = await supabaseAdmin
+    .from('cultural_backgrounds')
+    .select('*')
+    .eq('user_id', req.user.id)
+    .single();
 
   // Get users that haven't been matched with yet
   const { data: existingMatches } = await supabaseAdmin
@@ -140,7 +141,7 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
     if (preferences.age_min || preferences.age_max) {
       const today = new Date();
       if (preferences.age_max) {
-        const minBirthDate = new Date(today.getFullYear() - preferences.age_max, today.getMonth(), today.getDate());
+        const minBirthDate = new Date(today.getFullYear() - preferences.age_max - 1, today.getMonth(), today.getDate());
         query = query.gte('date_of_birth', minBirthDate.toISOString().split('T')[0]);
       }
       if (preferences.age_min) {
@@ -191,6 +192,9 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
       if (userCulture.birth_country === matchCulture.birth_country) {
         culturalScore += 10;
       }
+    } else {
+      // Default cultural score if no cultural background
+      culturalScore = 50;
     }
 
     // Location compatibility

@@ -269,13 +269,71 @@ router.get('/:id/stats', authenticateToken, asyncHandler(async (req, res) => {
     .select('*', { count: 'exact', head: true })
     .eq('endorsed_id', id);
 
+  // Get total messages sent/received
+  const { count: messagesSent } = await supabaseAdmin
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('sender_id', id);
+
+  const { count: messagesReceived } = await supabaseAdmin
+    .from('messages')
+    .select('*', { count: 'exact', head: true })
+    .neq('sender_id', id)
+    .in('conversation_id', 
+      supabaseAdmin
+        .from('conversations')
+        .select('id')
+        .or(`user1_id.eq.${id},user2_id.eq.${id}`)
+    );
+
   res.json({
     stats: {
       profile_views: profileViews || 0,
       likes_received: likesReceived || 0,
-      total_matches: totalMatches || 0,
+      matches: totalMatches || 0,
+      messages: (messagesSent || 0) + (messagesReceived || 0),
       endorsements: endorsements || 0
     }
+  });
+}));
+
+/**
+ * @route   GET /api/profiles/:id/activities
+ * @desc    Get user's recent activities
+ * @access  Private (own activities only)
+ */
+router.get('/:id/activities', authenticateToken, asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { limit = 10 } = req.query;
+
+  if (id !== req.user.id) {
+    return res.status(403).json({
+      error: 'You can only view your own activities',
+      code: 'UNAUTHORIZED_ACCESS'
+    });
+  }
+
+  const { data: activities, error } = await supabaseAdmin
+    .from('user_activities')
+    .select(`
+      *,
+      target_user:profiles!user_activities_target_user_id_fkey(
+        id, first_name, last_name, profile_photo_url
+      )
+    `)
+    .eq('user_id', id)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    return res.status(500).json({
+      error: 'Failed to fetch activities',
+      code: 'FETCH_ERROR'
+    });
+  }
+
+  res.json({
+    activities: activities || []
   });
 }));
 
