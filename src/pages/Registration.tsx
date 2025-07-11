@@ -76,6 +76,9 @@ export default function Registration() {
     education: '',
     occupation: '',
     bio: '',
+    profilePhoto: null,
+    idDocument: null,
+    videoSelfie: null
   });
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
@@ -208,6 +211,8 @@ export default function Registration() {
       }
       
       toast.error(errorMessage);
+    }
+  };
 
   const renderStepContent = () => {
     switch (currentStep) {
