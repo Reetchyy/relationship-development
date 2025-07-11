@@ -35,16 +35,16 @@ interface FormData {
   education: string;
   occupation: string;
   bio: string;
-  profilePhoto: File | null;
-  idDocument: File | null;
-  videoSelfie: File | null;
+  // profilePhoto: File | null;
+  // idDocument: File | null;
+  // videoSelfie: File | null;
 }
 
 const steps = [
   { id: 1, title: 'Basic Information', description: 'Tell us about yourself' },
   { id: 2, title: 'Cultural Background', description: 'Share your heritage' },
-  { id: 3, title: 'Verification', description: 'Verify your identity' },
-  { id: 4, title: 'Complete Profile', description: 'Final touches' },
+  // { id: 3, title: 'Verification', description: 'Verify your identity' },
+  { id: 3, title: 'Complete Profile', description: 'Final touches' },
 ];
 
 const tribes = [
@@ -61,7 +61,7 @@ export default function Registration() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [uploadingFiles, setUploadingFiles] = useState(false);
+  // const [uploadingFiles, setUploadingFiles] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -78,9 +78,9 @@ export default function Registration() {
     education: '',
     occupation: '',
     bio: '',
-    profilePhoto: null,
-    idDocument: null,
-    videoSelfie: null,
+    // profilePhoto: null,
+    // idDocument: null,
+    // videoSelfie: null,
   });
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
@@ -98,9 +98,9 @@ export default function Registration() {
     }));
   };
 
-  const handleFileUpload = (field: keyof FormData, file: File) => {
-    setFormData(prev => ({ ...prev, [field]: file }));
-  };
+  // const handleFileUpload = (field: keyof FormData, file: File) => {
+  //   setFormData(prev => ({ ...prev, [field]: file }));
+  // };
 
   const validateStep = (step: number): boolean => {
     switch (step) {
@@ -152,13 +152,13 @@ export default function Registration() {
           return false;
         }
         return true;
+      // case 3:
+      //   if (!formData.profilePhoto) {
+      //     toast.error('Please upload a profile photo');
+      //     return false;
+      //   }
+      //   return true;
       case 3:
-        if (!formData.profilePhoto) {
-          toast.error('Please upload a profile photo');
-          return false;
-        }
-        return true;
-      case 4:
         if (!formData.bio.trim()) {
           toast.error('Bio is required');
           return false;
@@ -193,7 +193,7 @@ export default function Registration() {
     }
 
     try {
-      setUploadingFiles(true);
+      // setUploadingFiles(true);
       
       console.log('🚀 Starting registration process...');
       
@@ -206,43 +206,43 @@ export default function Registration() {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Upload files after successful registration
-      if (formData.profilePhoto) {
-        try {
-          console.log('📸 Uploading profile photo...');
-          await uploadService.uploadProfilePhoto(formData.profilePhoto);
-          toast.success('Profile photo uploaded successfully');
-        } catch (error: any) {
-          console.error('Profile photo upload failed:', error);
-          // Don't show auth errors to user, they're likely temporary
-          if (error.message?.includes('authentication') || error.message?.includes('token')) {
-            toast.error('Profile photo upload failed. You can upload it later from your profile.');
-          } else {
-            toast.error(`Profile photo upload failed: ${error.message}`);
-          }
-        }
-      }
+      // if (formData.profilePhoto) {
+      //   try {
+      //     console.log('📸 Uploading profile photo...');
+      //     await uploadService.uploadProfilePhoto(formData.profilePhoto);
+      //     toast.success('Profile photo uploaded successfully');
+      //   } catch (error: any) {
+      //     console.error('Profile photo upload failed:', error);
+      //     // Don't show auth errors to user, they're likely temporary
+      //     if (error.message?.includes('authentication') || error.message?.includes('token')) {
+      //       toast.error('Profile photo upload failed. You can upload it later from your profile.');
+      //     } else {
+      //       toast.error(`Profile photo upload failed: ${error.message}`);
+      //     }
+      //   }
+      // }
       
-      if (formData.idDocument) {
-        try {
-          console.log('📄 Uploading ID document...');
-          await uploadService.uploadDocument(formData.idDocument, 'government_id');
-          toast.success('Identity document uploaded successfully');
-        } catch (error: any) {
-          console.error('Document upload failed:', error);
-          toast.error(`Document upload failed: ${error.message}`);
-        }
-      }
+      // if (formData.idDocument) {
+      //   try {
+      //     console.log('📄 Uploading ID document...');
+      //     await uploadService.uploadDocument(formData.idDocument, 'government_id');
+      //     toast.success('Identity document uploaded successfully');
+      //   } catch (error: any) {
+      //     console.error('Document upload failed:', error);
+      //     toast.error(`Document upload failed: ${error.message}`);
+      //   }
+      // }
       
-      if (formData.videoSelfie) {
-        try {
-          console.log('🎥 Uploading video selfie...');
-          await uploadService.uploadVideo(formData.videoSelfie, 'video_selfie');
-          toast.success('Video selfie uploaded successfully');
-        } catch (error: any) {
-          console.error('Video upload failed:', error);
-          toast.error(`Video upload failed: ${error.message}`);
-        }
-      }
+      // if (formData.videoSelfie) {
+      //   try {
+      //     console.log('🎥 Uploading video selfie...');
+      //     await uploadService.uploadVideo(formData.videoSelfie, 'video_selfie');
+      //     toast.success('Video selfie uploaded successfully');
+      //   } catch (error: any) {
+      //     console.error('Video upload failed:', error);
+      //     toast.error(`Video upload failed: ${error.message}`);
+      //   }
+      // }
       
       toast.success('Registration completed successfully! Please take the cultural quiz to verify your profile.');
       navigate('/cultural-quiz');
@@ -531,80 +531,80 @@ export default function Registration() {
           </div>
         );
 
+      // case 3:
+      //   return (
+      //     <div className="space-y-6">
+      //       <div className="text-center mb-8">
+      //         <h3 className="text-xl font-semibold text-white mb-2">Identity Verification</h3>
+      //         <p className="text-slate-400">Help us verify your identity to ensure a safe community</p>
+      //       </div>
+
+      //       <div className="space-y-6">
+      //         <div>
+      //           <label className="block text-sm font-medium text-slate-300 mb-2">
+      //             Profile Photo *
+      //           </label>
+      //           <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+      //             <Camera className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+      //             <p className="text-slate-400 mb-2">Upload a clear photo of yourself</p>
+      //             <input
+      //               type="file"
+      //               accept="image/*"
+      //               onChange={(e) => e.target.files?.[0] && handleFileUpload('profilePhoto', e.target.files[0])}
+      //               className="hidden"
+      //               id="profile-photo"
+      //               required
+      //             />
+      //             <label
+      //               htmlFor="profile-photo"
+      //               className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700"
+      //             >
+      //               <Upload className="w-4 h-4 mr-2" />
+      //               Choose Photo
+      //             </label>
+      //             {formData.profilePhoto && (
+      //               <p className="text-green-400 mt-2 flex items-center justify-center">
+      //                 <Check className="w-4 h-4 mr-1" />
+      //                 Photo uploaded: {formData.profilePhoto.name}
+      //               </p>
+      //             )}
+      //           </div>
+      //         </div>
+
+      //         <div>
+      //           <label className="block text-sm font-medium text-slate-300 mb-2">
+      //             ID Document (Optional)
+      //           </label>
+      //           <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
+      //             <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+      //             <p className="text-slate-400 mb-2">Upload a government-issued ID for faster verification</p>
+      //             <input
+      //               type="file"
+      //               accept="image/*,.pdf"
+      //               onChange={(e) => e.target.files?.[0] && handleFileUpload('idDocument', e.target.files[0])}
+      //               className="hidden"
+      //               id="id-document"
+      //             />
+      //             <label
+      //               htmlFor="id-document"
+      //               className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700"
+      //             >
+      //               <Upload className="w-4 h-4 mr-2" />
+      //               Upload ID
+      //             </label>
+      //             {formData.idDocument && (
+      //               <p className="text-green-400 mt-2 flex items-center justify-center">
+      //                 <Check className="w-4 h-4 mr-1" />
+      //                 Document uploaded: {formData.idDocument.name}
+      //               </p>
+      //             )}
+      //           </div>
+      //         </div>
+      //       </div>
+      //     </div>
+      //   );
+
       case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center mb-8">
-              <h3 className="text-xl font-semibold text-white mb-2">Identity Verification</h3>
-              <p className="text-slate-400">Help us verify your identity to ensure a safe community</p>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Profile Photo *
-                </label>
-                <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
-                  <Camera className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-2">Upload a clear photo of yourself</p>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => e.target.files?.[0] && handleFileUpload('profilePhoto', e.target.files[0])}
-                    className="hidden"
-                    id="profile-photo"
-                    required
-                  />
-                  <label
-                    htmlFor="profile-photo"
-                    className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose Photo
-                  </label>
-                  {formData.profilePhoto && (
-                    <p className="text-green-400 mt-2 flex items-center justify-center">
-                      <Check className="w-4 h-4 mr-1" />
-                      Photo uploaded: {formData.profilePhoto.name}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
-                  ID Document (Optional)
-                </label>
-                <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
-                  <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <p className="text-slate-400 mb-2">Upload a government-issued ID for faster verification</p>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={(e) => e.target.files?.[0] && handleFileUpload('idDocument', e.target.files[0])}
-                    className="hidden"
-                    id="id-document"
-                  />
-                  <label
-                    htmlFor="id-document"
-                    className="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg cursor-pointer hover:bg-primary-700"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload ID
-                  </label>
-                  {formData.idDocument && (
-                    <p className="text-green-400 mt-2 flex items-center justify-center">
-                      <Check className="w-4 h-4 mr-1" />
-                      Document uploaded: {formData.idDocument.name}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 4:
         return (
           <div className="space-y-6">
             <div>
@@ -729,10 +729,10 @@ export default function Registration() {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={uploadingFiles}
+                {/* disabled={uploadingFiles} */}
                 className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                {uploadingFiles ? 'Uploading Files...' : 'Complete Registration'}
+               Complete Registration
                 <Check className="w-5 h-5 ml-2" />
               </button>
             )}
