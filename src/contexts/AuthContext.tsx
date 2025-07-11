@@ -175,6 +175,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password: userData.password,
         firstName: userData.firstName,
         lastName: userData.lastName,
+        dateOfBirth: userData.dateOfBirth,
+        gender: userData.gender,
+        location: userData.location,
       });
       
       console.log('✅ User registered, logging in...');
