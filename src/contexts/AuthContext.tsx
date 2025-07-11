@@ -169,6 +169,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log('📝 Starting user registration...');
       
+      const loginResponse = await apiService.register(userData);
+      
+      if (loginResponse.user && loginResponse.profile) {
         // Skip file uploads for now - using initials avatars
         console.log('📸 Using initials avatar instead of file uploads');
 
