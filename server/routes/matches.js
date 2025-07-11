@@ -121,6 +121,7 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
       personality_assessments(*)
     `)
     .eq('is_active', true)
+    .eq('is_verified', true)
     .neq('id', req.user.id);
 
   // Exclude already matched users
@@ -213,41 +214,27 @@ router.get('/suggestions', authenticateToken, asyncHandler(async (req, res) => {
 
     return {
       ...match,
-      compatibility_score: Math.round(overallScore),
-      cultural_compatibility: Math.round(culturalScore),
-      personality_compatibility: Math.round(personalityScore),
-      location_compatibility: Math.round(locationScore)
+      compatibility_scores: {
+        overall: Math.round(overallScore),
+        cultural: Math.round(culturalScore),
+        personality: Math.round(personalityScore),
+        location: Math.round(locationScore)
+      }
     };
   });
 
-  // Sort by compatibility score and limit results
-  const topMatches = scoredMatches
-    .sort((a, b) => b.compatibility_score - a.compatibility_score)
+router.post('/:targetUserId/action', authenticateToken, asyncHandler(async (req, res) => {
+  const { targetUserId } = req.params;
+    .sort((a, b) => b.compatibility_scores.overall - a.compatibility_scores.overall)
     .slice(0, limit);
 
-  res.json({
+    return res.status(400).json({
     suggestions: topMatches,
     total: topMatches.length
-  });
-}));
-
-/**
- * @route   POST /api/matches/:userId/action
- * @desc    Like, pass, or super like a user
- * @access  Private
- */
-router.post('/:userId/action', authenticateToken, asyncHandler(async (req, res) => {
-  const { userId } = req.params;
-  const { action } = req.body; // 'like', 'pass', 'super_like'
-
-  if (!['like', 'pass', 'super_like'].includes(action)) {
-    return res.status(400).json({
-      error: 'Invalid action. Must be like, pass, or super_like',
-      code: 'INVALID_ACTION'
     });
   }
 
-  if (userId === req.user.id) {
+  if (targetUserId === req.user.id) {
     return res.status(400).json({
       error: 'Cannot perform action on yourself',
       code: 'SELF_ACTION'
@@ -258,7 +245,7 @@ router.post('/:userId/action', authenticateToken, asyncHandler(async (req, res) 
   const { data: existingMatch } = await supabaseAdmin
     .from('matches')
     .select('*')
-    .or(`and(user1_id.eq.${req.user.id},user2_id.eq.${userId}),and(user1_id.eq.${userId},user2_id.eq.${req.user.id})`)
+    .or(`and(user1_id.eq.${req.user.id},user2_id.eq.${targetUserId}),and(user1_id.eq.${targetUserId},user2_id.eq.${req.user.id})`)
     .single();
 
   let match;
@@ -267,12 +254,13 @@ router.post('/:userId/action', authenticateToken, asyncHandler(async (req, res) 
     // Update existing match
     const isUser1 = existingMatch.user1_id === req.user.id;
     const updateField = isUser1 ? 'user1_action' : 'user2_action';
+    const otherUserAction = isUser1 ? existingMatch.user2_action : existingMatch.user1_action;
     
     const { data, error } = await supabaseAdmin
       .from('matches')
       .update({
         [updateField]: action,
-        ...(action === 'like' && existingMatch[isUser1 ? 'user2_action' : 'user1_action'] === 'like' && {
+        ...(action === 'like' && otherUserAction === 'like' && {
           is_mutual_match: true,
           matched_at: new Date().toISOString()
         })
@@ -295,7 +283,7 @@ router.post('/:userId/action', authenticateToken, asyncHandler(async (req, res) 
       .from('matches')
       .insert({
         user1_id: req.user.id,
-        user2_id: userId,
+        user2_id: targetUserId,
         user1_action: action,
         user2_action: 'pending',
         compatibility_score: 0, // Will be calculated later
@@ -322,7 +310,7 @@ router.post('/:userId/action', authenticateToken, asyncHandler(async (req, res) 
     .insert({
       user_id: req.user.id,
       activity_type: action,
-      target_user_id: userId,
+      target_user_id: targetUserId,
       metadata: { action_type: action }
     });
 
@@ -345,3 +333,4 @@ router.post('/:userId/action', authenticateToken, asyncHandler(async (req, res) 
 }));
 
 export default router;
+ * @route   POST /api/matches/:targetUserId/action
