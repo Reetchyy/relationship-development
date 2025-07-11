@@ -279,20 +279,32 @@ console.log ({messagesSent});
   const { count: messagesReceived } = await supabaseAdmin
     .from('messages')
     .select('*', { count: 'exact', head: true })
-    .neq('sender_id', id)
-    .in('conversation_id', 
-      supabaseAdmin
-        .from('conversations')
-        .select('id')
-        .or(`user1_id.eq.${id},user2_id.eq.${id}`)
-    );
+    .neq('sender_id', id);
+
+  // Get conversations for this user to count received messages
+  const { data: userConversations } = await supabaseAdmin
+    .from('conversations')
+    .select('id')
+    .or(`user1_id.eq.${id},user2_id.eq.${id}`);
+
+  const conversationIds = userConversations?.map(conv => conv.id) || [];
+  
+  let messagesReceivedCount = 0;
+  if (conversationIds.length > 0) {
+    const { count: receivedCount } = await supabaseAdmin
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .neq('sender_id', id)
+      .in('conversation_id', conversationIds);
+    messagesReceivedCount = receivedCount || 0;
+  }
 
   res.json({
     stats: {
       profile_views: profileViews || 0,
       likes_received: likesReceived || 0,
       matches: totalMatches || 0,
-      messages: (messagesSent || 0) + (messagesReceived || 0),
+      messages: (messagesSent || 0) + messagesReceivedCount,
       endorsements: endorsements || 0
     }
   });
