@@ -1,5 +1,4 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import multer from 'multer';
 import dotenv from 'dotenv';
 
@@ -12,50 +11,9 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Storage configuration for profile photos
-const profilePhotoStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'diaspora-connect/profile-photos',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-    transformation: [
-      { width: 500, height: 500, crop: 'fill', quality: 'auto' },
-      { fetch_format: 'auto' }
-    ],
-    public_id: (req, file) => `profile_${req.user.id}_${Date.now()}`,
-  },
-});
-
-// Storage configuration for identity documents
-const documentStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'diaspora-connect/documents',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'pdf'],
-    transformation: [
-      { quality: 'auto', fetch_format: 'auto' }
-    ],
-    public_id: (req, file) => `doc_${req.user.id}_${file.fieldname}_${Date.now()}`,
-  },
-});
-
-// Storage configuration for videos
-const videoStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'diaspora-connect/videos',
-    resource_type: 'video',
-    allowed_formats: ['mp4', 'mov', 'avi', 'webm'],
-    transformation: [
-      { quality: 'auto', fetch_format: 'auto' }
-    ],
-    public_id: (req, file) => `video_${req.user.id}_${Date.now()}`,
-  },
-});
-
-// Multer configurations
+// Simple multer configuration for memory storage
 export const uploadProfilePhoto = multer({
-  storage: profilePhotoStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
@@ -69,7 +27,7 @@ export const uploadProfilePhoto = multer({
 });
 
 export const uploadDocument = multer({
-  storage: documentStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
@@ -84,7 +42,7 @@ export const uploadDocument = multer({
 });
 
 export const uploadVideo = multer({
-  storage: videoStorage,
+  storage: multer.memoryStorage(),
   limits: {
     fileSize: 50 * 1024 * 1024, // 50MB limit
   },

@@ -2,9 +2,19 @@ import express from 'express';
 import { supabaseAdmin } from '../config/supabase.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { uploadProfilePhoto, uploadDocument, uploadVideo, deleteFromCloudinary } from '../config/cloudinary.js';
+import { uploadProfilePhoto, uploadDocument, uploadVideo, deleteFromCloudinary, cloudinary } from '../config/cloudinary.js';
 
 const router = express.Router();
+
+// Helper function to upload buffer to Cloudinary
+const uploadToCloudinary = (buffer, options) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    }).end(buffer);
+  });
+};
 
 /**
  * @route   POST /api/upload/profile-photo
@@ -23,11 +33,21 @@ router.post('/profile-photo',
     }
 
     try {
+      // Upload to Cloudinary
+      const uploadResult = await uploadToCloudinary(req.file.buffer, {
+        folder: 'diaspora-connect/profile-photos',
+        public_id: `profile_${req.user.id}_${Date.now()}`,
+        transformation: [
+          { width: 500, height: 500, crop: 'fill', quality: 'auto' },
+          { fetch_format: 'auto' }
+        ]
+      });
+
       // Update user profile with new photo URL
       const { data: profile, error } = await supabaseAdmin
         .from('profiles')
         .update({
-          profile_photo_url: req.file.path,
+          profile_photo_url: uploadResult.secure_url,
           updated_at: new Date().toISOString()
         })
         .eq('id', req.user.id)
@@ -36,13 +56,13 @@ router.post('/profile-photo',
 
       if (error) {
         // If database update fails, delete the uploaded file
-        await deleteFromCloudinary(req.file.filename);
+        await deleteFromCloudinary(uploadResult.public_id);
         throw error;
       }
 
       res.json({
         message: 'Profile photo uploaded successfully',
-        profile_photo_url: req.file.path,
+        profile_photo_url: uploadResult.secure_url,
         profile
       });
 
@@ -75,13 +95,20 @@ router.post('/document',
     const { document_type = 'government_id' } = req.body;
 
     try {
+      // Upload to Cloudinary
+      const uploadResult = await uploadToCloudinary(req.file.buffer, {
+        folder: 'diaspora-connect/documents',
+        public_id: `doc_${req.user.id}_${document_type}_${Date.now()}`,
+        resource_type: 'auto'
+      });
+
       // Save document record to database
       const { data: document, error } = await supabaseAdmin
         .from('verification_documents')
         .insert({
           user_id: req.user.id,
           document_type,
-          file_url: req.file.path,
+          file_url: uploadResult.secure_url,
           verification_status: 'pending'
         })
         .select()
@@ -89,7 +116,7 @@ router.post('/document',
 
       if (error) {
         // If database insert fails, delete the uploaded file
-        await deleteFromCloudinary(req.file.filename);
+        await deleteFromCloudinary(uploadResult.public_id);
         throw error;
       }
 
@@ -127,13 +154,20 @@ router.post('/video',
     const { document_type = 'video_selfie' } = req.body;
 
     try {
+      // Upload to Cloudinary
+      const uploadResult = await uploadToCloudinary(req.file.buffer, {
+        folder: 'diaspora-connect/videos',
+        public_id: `video_${req.user.id}_${Date.now()}`,
+        resource_type: 'video'
+      });
+
       // Save video document record to database
       const { data: document, error } = await supabaseAdmin
         .from('verification_documents')
         .insert({
           user_id: req.user.id,
           document_type,
-          file_url: req.file.path,
+          file_url: uploadResult.secure_url,
           verification_status: 'pending'
         })
         .select()
@@ -141,7 +175,7 @@ router.post('/video',
 
       if (error) {
         // If database insert fails, delete the uploaded file
-        await deleteFromCloudinary(req.file.filename, 'video');
+        await deleteFromCloudinary(uploadResult.public_id, 'video');
         throw error;
       }
 
