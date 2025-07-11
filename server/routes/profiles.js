@@ -275,23 +275,31 @@ router.get('/:id/stats', authenticateToken, asyncHandler(async (req, res) => {
     .select('*', { count: 'exact', head: true })
     .eq('sender_id', id);
 
-  const { count: messagesReceived } = await supabaseAdmin
-    .from('messages')
-    .select('*', { count: 'exact', head: true })
-    .neq('sender_id', id)
-    .in('conversation_id', 
-      supabaseAdmin
-        .from('conversations')
-        .select('id')
-        .or(`user1_id.eq.${id},user2_id.eq.${id}`)
-    );
+  // First get conversation IDs where user is a participant
+  const { data: conversations } = await supabaseAdmin
+    .from('conversations')
+    .select('id')
+    .or(`user1_id.eq.${id},user2_id.eq.${id}`);
+
+  const conversationIds = conversations ? conversations.map(conv => conv.id) : [];
+  
+  let messagesReceived = 0;
+  if (conversationIds.length > 0) {
+    const { count } = await supabaseAdmin
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .neq('sender_id', id)
+      .in('conversation_id', conversationIds);
+    
+    messagesReceived = count || 0;
+  }
 
   res.json({
     stats: {
       profile_views: profileViews || 0,
       likes_received: likesReceived || 0,
       matches: totalMatches || 0,
-      messages: (messagesSent || 0) + (messagesReceived || 0),
+      messages: (messagesSent || 0) + messagesReceived,
       endorsements: endorsements || 0
     }
   });
