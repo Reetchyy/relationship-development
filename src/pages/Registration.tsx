@@ -195,8 +195,15 @@ export default function Registration() {
     try {
       setUploadingFiles(true);
       
+      console.log('🚀 Starting registration process...');
+      
       // Complete registration with the form data including password
       await completeRegistration(formData);
+      
+      console.log('✅ Registration completed, starting file uploads...');
+      
+      // Small delay to ensure session is properly established
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Upload files after successful registration
       if (formData.profilePhoto) {
@@ -206,7 +213,12 @@ export default function Registration() {
           toast.success('Profile photo uploaded successfully');
         } catch (error: any) {
           console.error('Profile photo upload failed:', error);
-          toast.error(`Profile photo upload failed: ${error.message}`);
+          // Don't show auth errors to user, they're likely temporary
+          if (error.message?.includes('authentication') || error.message?.includes('token')) {
+            toast.error('Profile photo upload failed. You can upload it later from your profile.');
+          } else {
+            toast.error(`Profile photo upload failed: ${error.message}`);
+          }
         }
       }
       

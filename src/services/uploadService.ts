@@ -19,12 +19,33 @@ class UploadService {
   }
 
   private async getAuthHeaders() {
-    // Try to get token from Supabase session
-    const { supabase } = await import('../lib/supabase');
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    const token = session?.access_token;
-    console.log('🔑 Getting auth token:', token ? 'Found' : 'Not found');
+    try {
+      // Try to get token from Supabase session
+      const { supabase } = await import('../lib/supabase');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('❌ Error getting session:', error);
+        throw new Error('Failed to get authentication session');
+      }
+      
+      const token = session?.access_token;
+      console.log('🔑 Getting auth token:', token ? 'Found' : 'Not found');
+      console.log('🔑 Session exists:', !!session);
+      console.log('🔑 User ID:', session?.user?.id);
+      
+      if (!token) {
+        throw new Error('No authentication token available. Please log in again.');
+      }
+      
+      return {
+        'Authorization': `Bearer ${token}`,
+      };
+    } catch (error) {
+      console.error('❌ Auth header error:', error);
+      throw error;
+    }
+  }
     
     return {
       'Authorization': token ? `Bearer ${token}` : '',
@@ -39,8 +60,14 @@ class UploadService {
       fileType: file.type
     });
 
-    const headers = await this.getAuthHeaders();
-    console.log('🔑 Auth headers:', headers.Authorization ? 'Token present' : 'No token');
+    let headers;
+    try {
+      headers = await this.getAuthHeaders();
+      console.log('🔑 Auth headers:', headers.Authorization ? 'Token present' : 'No token');
+    } catch (error) {
+      console.error('❌ Failed to get auth headers:', error);
+      throw new Error(`Authentication failed: ${error.message}`);
+    }
     
     const formData = new FormData();
     formData.append(endpoint === 'profile-photo' ? 'profilePhoto' : endpoint === 'video' ? 'video' : 'document', file);

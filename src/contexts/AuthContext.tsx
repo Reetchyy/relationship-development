@@ -167,6 +167,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       
+      console.log('📝 Starting user registration...');
+      
       // Register the user with the provided password
       const registerResponse = await apiService.register({
         email: userData.email,
@@ -175,11 +177,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         lastName: userData.lastName,
       });
       
+      console.log('✅ User registered, logging in...');
+      
       // Then immediately log them in to get the access token
       const loginResponse = await apiService.login({
         email: userData.email,
         password: userData.password
       });
+      
+      console.log('✅ User logged in, updating profile...');
       
       if (loginResponse.user && loginResponse.profile) {
         // Update the profile with additional information
@@ -193,6 +199,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           bio: userData.bio,
         });
 
+        console.log('✅ Profile updated, setting cultural background...');
+        
         // Create cultural background if provided
         if (userData.tribe || userData.languages?.length > 0) {
           await apiService.updateCulturalBackground(loginResponse.user.id, {
@@ -203,6 +211,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
 
+        console.log('✅ Registration process complete, setting auth state...');
+        
         dispatch({
           type: 'LOGIN_SUCCESS',
           payload: {
