@@ -82,6 +82,7 @@ export default function Registration() {
   });
   const navigate = useNavigate();
   const { completeRegistration } = useAuth();
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -602,9 +603,10 @@ export default function Registration() {
             ) : (
               <button
                 onClick={handleSubmit}
+                disabled={uploadingFiles}
                 className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Complete Registration
+                {uploadingFiles ? 'Uploading Files...' : 'Complete Registration'}
                 <Check className="w-5 h-5 ml-2" />
               </button>
             )}
