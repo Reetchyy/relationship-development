@@ -359,6 +359,14 @@ class ApiService {
     return this.request<ApiResponse>('/quiz/results');
   }
 
+  // Profile view tracking
+  async trackProfileView(targetUserId: string) {
+    return this.request<ApiResponse>('/profiles/track-view', {
+      method: 'POST',
+      body: JSON.stringify({ target_user_id: targetUserId }),
+    });
+  }
+
   async getQuizQuestions() {
     return this.request<ApiResponse>('/quiz/questions');
   }

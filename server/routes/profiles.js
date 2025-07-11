@@ -353,4 +353,67 @@ router.get('/:id/activities', authenticateToken, asyncHandler(async (req, res) =
   });
 }));
 
+/**
+ * @route   POST /api/profiles/track-view
+ * @desc    Track profile view activity
+ * @access  Private
+ */
+router.post('/track-view', authenticateToken, asyncHandler(async (req, res) => {
+  const { target_user_id } = req.body;
+
+  if (!target_user_id) {
+    return res.status(400).json({
+      error: 'target_user_id is required',
+      code: 'MISSING_TARGET_USER'
+    });
+  }
+
+  if (target_user_id === req.user.id) {
+    return res.status(400).json({
+      error: 'Cannot track view of own profile',
+      code: 'SELF_VIEW'
+    });
+  }
+
+  // Check if target user exists and is active
+  const { data: targetUser, error: userError } = await supabaseAdmin
+    .from('profiles')
+    .select('id, is_active')
+    .eq('id', target_user_id)
+    .eq('is_active', true)
+    .single();
+
+  if (userError || !targetUser) {
+    return res.status(404).json({
+      error: 'Target user not found or inactive',
+      code: 'USER_NOT_FOUND'
+    });
+  }
+
+  // Insert profile view activity
+  const { error: activityError } = await supabaseAdmin
+    .from('user_activities')
+    .insert({
+      user_id: req.user.id,
+      activity_type: 'profile_view',
+      target_user_id: target_user_id,
+      metadata: {
+        viewed_at: new Date().toISOString(),
+        source: 'matchmaking'
+      }
+    });
+
+  if (activityError) {
+    console.error('Failed to track profile view:', activityError);
+    return res.status(500).json({
+      error: 'Failed to track profile view',
+      code: 'TRACKING_ERROR'
+    });
+  }
+
+  res.json({
+    message: 'Profile view tracked successfully'
+  });
+}));
+
 export default router;

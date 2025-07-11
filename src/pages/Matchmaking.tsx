@@ -131,6 +131,24 @@ export default function Matchmaking() {
     }
   };
 
+  // Track profile view when user changes to a new profile
+  useEffect(() => {
+    const trackProfileView = async () => {
+      if (currentMatch && !actionLoading) {
+        try {
+          await apiService.trackProfileView(currentMatch.id);
+        } catch (error) {
+          // Silently fail - don't interrupt user experience for tracking
+          console.error('Failed to track profile view:', error);
+        }
+      }
+    };
+
+    // Small delay to ensure the profile is actually being viewed
+    const timer = setTimeout(trackProfileView, 1000);
+    return () => clearTimeout(timer);
+  }, [currentMatch?.id, actionLoading]);
+
   const calculateAge = (dateOfBirth: string): number => {
     const today = new Date();
     const birth = new Date(dateOfBirth);
