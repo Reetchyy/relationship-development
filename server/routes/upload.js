@@ -9,9 +9,20 @@ const router = express.Router();
 // Helper function to upload buffer to Cloudinary
 const uploadToCloudinary = (buffer, options) => {
   return new Promise((resolve, reject) => {
+    console.log('📤 Uploading to Cloudinary with options:', { 
+      folder: options.folder, 
+      public_id: options.public_id,
+      resource_type: options.resource_type || 'image'
+    });
+    
     cloudinary.uploader.upload_stream(options, (error, result) => {
-      if (error) reject(error);
-      else resolve(result);
+      if (error) {
+        console.error('❌ Cloudinary upload error:', error);
+        reject(error);
+      } else {
+        console.log('✅ Cloudinary upload success:', result.public_id);
+        resolve(result);
+      }
     }).end(buffer);
   });
 };
@@ -25,6 +36,14 @@ router.post('/profile-photo',
   authenticateToken,
   uploadProfilePhoto.single('profilePhoto'),
   asyncHandler(async (req, res) => {
+    console.log('📸 Profile photo upload request received');
+    console.log('User ID:', req.user?.id);
+    console.log('File info:', req.file ? {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size
+    } : 'No file');
+
     if (!req.file) {
       return res.status(400).json({
         error: 'No file uploaded',
@@ -43,6 +62,8 @@ router.post('/profile-photo',
         ]
       });
 
+      console.log('✅ Profile photo uploaded to Cloudinary:', uploadResult.secure_url);
+
       // Update user profile with new photo URL
       const { data: profile, error } = await supabaseAdmin
         .from('profiles')
@@ -55,10 +76,13 @@ router.post('/profile-photo',
         .single();
 
       if (error) {
+        console.error('❌ Database update error:', error);
         // If database update fails, delete the uploaded file
         await deleteFromCloudinary(uploadResult.public_id);
         throw error;
       }
+
+      console.log('✅ Profile updated in database');
 
       res.json({
         message: 'Profile photo uploaded successfully',
@@ -70,7 +94,8 @@ router.post('/profile-photo',
       console.error('Profile photo upload error:', error);
       res.status(500).json({
         error: 'Failed to upload profile photo',
-        code: 'UPLOAD_ERROR'
+        code: 'UPLOAD_ERROR',
+        details: error.message
       });
     }
   })

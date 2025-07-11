@@ -201,6 +201,7 @@ export default function Registration() {
       // Upload files after successful registration
       if (formData.profilePhoto) {
         try {
+          console.log('📸 Uploading profile photo...');
           await uploadService.uploadProfilePhoto(formData.profilePhoto);
           toast.success('Profile photo uploaded successfully');
         } catch (error: any) {
@@ -211,6 +212,7 @@ export default function Registration() {
       
       if (formData.idDocument) {
         try {
+          console.log('📄 Uploading ID document...');
           await uploadService.uploadDocument(formData.idDocument, 'government_id');
           toast.success('Identity document uploaded successfully');
         } catch (error: any) {
@@ -221,6 +223,7 @@ export default function Registration() {
       
       if (formData.videoSelfie) {
         try {
+          console.log('🎥 Uploading video selfie...');
           await uploadService.uploadVideo(formData.videoSelfie, 'video_selfie');
           toast.success('Video selfie uploaded successfully');
         } catch (error: any) {

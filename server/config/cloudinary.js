@@ -4,12 +4,21 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Validate Cloudinary configuration
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.error('❌ Cloudinary configuration missing! Please check your .env file:');
+  console.error('Required variables: CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET');
+  throw new Error('Cloudinary configuration incomplete');
+}
+
 // Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+console.log('✅ Cloudinary configured successfully');
 
 // Simple multer configuration for memory storage
 export const uploadProfilePhoto = multer({

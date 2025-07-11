@@ -19,14 +19,28 @@ class UploadService {
   }
 
   private async getAuthHeaders() {
-    const token = localStorage.getItem('supabase.auth.token');
+    // Try to get token from Supabase session
+    const { supabase } = await import('../lib/supabase');
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const token = session?.access_token;
+    console.log('🔑 Getting auth token:', token ? 'Found' : 'Not found');
+    
     return {
       'Authorization': token ? `Bearer ${token}` : '',
     };
   }
 
   private async uploadFile(endpoint: string, file: File, additionalData?: Record<string, string>): Promise<UploadResponse> {
+    console.log('📤 Starting file upload:', {
+      endpoint,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type
+    });
+
     const headers = await this.getAuthHeaders();
+    console.log('🔑 Auth headers:', headers.Authorization ? 'Token present' : 'No token');
     
     const formData = new FormData();
     formData.append(endpoint === 'profile-photo' ? 'profilePhoto' : endpoint === 'video' ? 'video' : 'document', file);
@@ -38,6 +52,8 @@ class UploadService {
       });
     }
 
+    console.log('📡 Making request to:', `${this.baseURL}/${endpoint}`);
+
     const response = await fetch(`${this.baseURL}/${endpoint}`, {
       method: 'POST',
       headers: {
@@ -47,12 +63,17 @@ class UploadService {
       body: formData,
     });
 
+    console.log('📥 Response status:', response.status);
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      console.error('❌ Upload failed:', error);
       throw new Error(error.message || `HTTP ${response.status}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    console.log('✅ Upload successful:', result);
+    return result;
   }
 
   /**

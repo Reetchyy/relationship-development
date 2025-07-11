@@ -9,7 +9,11 @@ export const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
+    console.log('🔐 Auth check - Header present:', !!authHeader);
+    console.log('🔐 Auth check - Token extracted:', !!token);
+
     if (!token) {
+      console.log('❌ No token provided');
       return res.status(401).json({
         error: 'Access token required',
         code: 'MISSING_TOKEN'
@@ -20,11 +24,14 @@ export const authenticateToken = async (req, res, next) => {
     const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !user) {
+      console.log('❌ Token validation failed:', error?.message);
       return res.status(401).json({
         error: 'Invalid or expired token',
         code: 'INVALID_TOKEN'
       });
     }
+
+    console.log('✅ User authenticated:', user.id);
 
     // Attach user to request object
     req.user = user;
