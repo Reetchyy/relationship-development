@@ -169,7 +169,9 @@ class ApiService {
   }
 
   async getProfileStats(id: string) {
-    return this.request<ApiResponse>(`/profiles/${id}/stats`);
+    const res = this.request<ApiResponse>(`/profiles/${id}/stats`);
+    console.log (res);
+    return res;
   }
 
   // User activity endpoints
