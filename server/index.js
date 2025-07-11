@@ -14,6 +14,7 @@ import chatRoutes from './routes/chat.js';
 import communityRoutes from './routes/community.js';
 import adminRoutes from './routes/admin.js';
 import quizRoutes from './routes/quiz.js';
+import uploadRoutes from './routes/upload.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -104,6 +105,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/quiz', quizRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler for API routes
 app.use('/api/*', (req, res) => {

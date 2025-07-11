@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import { uploadService } from '../services/uploadService';
 
 interface FormData {
   firstName: string;
@@ -60,6 +61,7 @@ export default function Registration() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
@@ -191,8 +193,42 @@ export default function Registration() {
     }
 
     try {
+      setUploadingFiles(true);
+      
       // Complete registration with the form data including password
       await completeRegistration(formData);
+      
+      // Upload files after successful registration
+      if (formData.profilePhoto) {
+        try {
+          await uploadService.uploadProfilePhoto(formData.profilePhoto);
+          toast.success('Profile photo uploaded successfully');
+        } catch (error: any) {
+          console.error('Profile photo upload failed:', error);
+          toast.error(`Profile photo upload failed: ${error.message}`);
+        }
+      }
+      
+      if (formData.idDocument) {
+        try {
+          await uploadService.uploadDocument(formData.idDocument, 'government_id');
+          toast.success('Identity document uploaded successfully');
+        } catch (error: any) {
+          console.error('Document upload failed:', error);
+          toast.error(`Document upload failed: ${error.message}`);
+        }
+      }
+      
+      if (formData.videoSelfie) {
+        try {
+          await uploadService.uploadVideo(formData.videoSelfie, 'video_selfie');
+          toast.success('Video selfie uploaded successfully');
+        } catch (error: any) {
+          console.error('Video upload failed:', error);
+          toast.error(`Video upload failed: ${error.message}`);
+        }
+      }
+      
       toast.success('Registration completed successfully! Please take the cultural quiz to verify your profile.');
       navigate('/cultural-quiz');
     } catch (error: any) {
@@ -678,9 +714,10 @@ export default function Registration() {
             ) : (
               <button
                 onClick={handleSubmit}
+                disabled={uploadingFiles}
                 className="flex items-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                Complete Registration
+                {uploadingFiles ? 'Uploading Files...' : 'Complete Registration'}
                 <Check className="w-5 h-5 ml-2" />
               </button>
             )}
