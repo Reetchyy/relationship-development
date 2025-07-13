@@ -20,22 +20,19 @@ class UploadService {
 
   private async getAuthHeaders() {
     try {
-      // Get fresh token from Supabase session
-      const { supabase } = await import('../lib/supabase'); 
+      // Try to get token from Supabase session
+      const { supabase } = await import('../lib/supabase');
       const { data: { session }, error } = await supabase.auth.getSession();
       
       if (error) {
         console.error('❌ Error getting session:', error);
-        throw new Error(`Failed to get authentication session: ${error.message}`);
+        throw new Error('Failed to get authentication session');
       }
       
       const token = session?.access_token;
-      console.log('🔑 Upload auth check:', {
-        hasToken: !!token,
-        hasSession: !!session,
-        userId: session?.user?.id,
-        expiresAt: session?.expires_at
-      });
+      console.log('🔑 Getting auth token:', token ? 'Found' : 'Not found');
+      console.log('🔑 Session exists:', !!session);
+      console.log('🔑 User ID:', session?.user?.id);
       
       if (!token) {
         throw new Error('No authentication token available. Please log in again.');
@@ -50,27 +47,6 @@ class UploadService {
     }
   }
 
-  private async retryWithAuth<T>(operation: () => Promise<T>, maxRetries = 1): Promise<T> {
-    let lastError;
-    
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        return await operation();
-      } catch (error) {
-        lastError = error;
-        
-        if (attempt < maxRetries && error instanceof Error && 
-            (error.message.includes('Authentication failed') || 
-             error.message.includes('token'))) {
-          console.log(`🔄 Upload auth failed, retrying... (${attempt + 1}/${maxRetries + 1})`);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-        }
-      }
-    }
-    
-    throw lastError;
-  }
-
   private async uploadFile(endpoint: string, file: File, additionalData?: Record<string, string>): Promise<UploadResponse> {
     console.log('📤 Starting file upload:', {
       endpoint,
@@ -79,49 +55,47 @@ class UploadService {
       fileType: file.type
     });
 
-    return this.retryWithAuth(async () => {
-      let headers;
-      try {
-        headers = await this.getAuthHeaders();
-        console.log('🔑 Auth headers:', headers.Authorization ? 'Token present' : 'No token');
-      } catch (error) {
-        console.error('❌ Failed to get auth headers:', error);
-        throw new Error(`Authentication failed: ${error.message}`);
-      }
+    let headers;
+    try {
+      headers = await this.getAuthHeaders();
+      console.log('🔑 Auth headers:', headers.Authorization ? 'Token present' : 'No token');
+    } catch (error) {
+      console.error('❌ Failed to get auth headers:', error);
+      throw new Error(`Authentication failed: ${error.message}`);
+    }
     
-      const formData = new FormData();
-      formData.append(endpoint === 'profile-photo' ? 'profilePhoto' : endpoint === 'video' ? 'video' : 'document', file);
+    const formData = new FormData();
+    formData.append(endpoint === 'profile-photo' ? 'profilePhoto' : endpoint === 'video' ? 'video' : 'document', file);
     
-      // Add additional data if provided
-      if (additionalData) {
-        Object.entries(additionalData).forEach(([key, value]) => {
-          formData.append(key, value);
-        });
-      }
-
-      console.log('📡 Making request to:', `${this.baseURL}/${endpoint}`);
-
-      const response = await fetch(`${this.baseURL}/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          ...headers,
-          // Don't set Content-Type for FormData, let browser set it with boundary
-        },
-        body: formData,
+    // Add additional data if provided
+    if (additionalData) {
+      Object.entries(additionalData).forEach(([key, value]) => {
+        formData.append(key, value);
       });
+    }
 
-      console.log('📥 Response status:', response.status);
+    console.log('📡 Making request to:', `${this.baseURL}/${endpoint}`);
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Upload failed' }));
-        console.error('❌ Upload failed:', error);
-        throw new Error(error.message || `HTTP ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('✅ Upload successful:', result);
-      return result;
+    const response = await fetch(`${this.baseURL}/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        ...headers,
+        // Don't set Content-Type for FormData, let browser set it with boundary
+      },
+      body: formData,
     });
+
+    console.log('📥 Response status:', response.status);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: 'Upload failed' }));
+      console.error('❌ Upload failed:', error);
+      throw new Error(error.message || `HTTP ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Upload successful:', result);
+    return result;
   }
 
   /**

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { apiService } from '../services/api';
-import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface User {
@@ -96,36 +95,10 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  // Set up auth state change listener
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔐 Auth state changed:', event, session?.user?.id);
-        
-        if (event === 'SIGNED_OUT' || !session) {
-          dispatch({ type: 'LOGOUT' });
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // Refresh user data when auth state changes
-          await checkAuthStatus();
-        }
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   // Check authentication status on app load
   const checkAuthStatus = async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
-      
-      // First check if we have a valid session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        dispatch({ type: 'LOGOUT' });
-        return;
-      }
       
       const response = await apiService.getCurrentUser();
       
@@ -141,11 +114,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'LOGOUT' });
       }
     } catch (error) {
-      // Handle token expiration gracefully
-      if (error instanceof Error && error.message.includes('JWT expired')) {
-        console.log('🔄 Token expired during auth check, will refresh automatically');
-        return; // Let the auth state change handler deal with it
-      }
       // Only log unexpected errors, not authentication failures
       console.error('Unexpected auth check error:', error);
       dispatch({ type: 'LOGOUT' });
@@ -153,6 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
@@ -179,13 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      // Sign out from Supabase (this will trigger the auth state change)
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('Logout error:', error);
-      }
-      // Also call API logout for cleanup
-      await apiService.logout().catch(console.error);
+      await apiService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -262,11 +228,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw error;
     }
   };
-
-  // Initial auth check
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
 
   return (
     <AuthContext.Provider value={{ 
