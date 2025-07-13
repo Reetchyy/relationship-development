@@ -20,35 +20,63 @@ interface PaginatedResponse<T> {
 
 class ApiService {
   private baseURL: string;
+  private refreshPromise: Promise<any> | null = null;
   private token: string | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
-    this.loadToken();
   }
 
-  private loadToken() {
-    this.token = localStorage.getItem('supabase.auth.token');
-  }
-
-  private getHeaders(): HeadersInit {
+  private async getHeaders(): Promise<HeadersInit> {
+    // Get fresh session from Supabase
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
     };
 
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`;
+    if (session?.access_token) {
+      headers.Authorization = `Bearer ${session.access_token}`;
     }
 
     return headers;
   }
 
-  setToken(token: string | null) {
-    this.token = token;
-    if (token) {
-      localStorage.setItem('supabase.auth.token', token);
-    } else {
-      localStorage.removeItem('supabase.auth.token');
+  private async handleAuthError(error: any): Promise<void> {
+    if (error.message?.includes('JWT expired') || 
+        error.message?.includes('Invalid token') ||
+        error.message?.includes('Access token required')) {
+      
+      console.log('🔄 Token expired, attempting refresh...');
+      
+      // Prevent multiple simultaneous refresh attempts
+      if (!this.refreshPromise) {
+        this.refreshPromise = this.refreshSession();
+      }
+      
+      try {
+        await this.refreshPromise;
+        console.log('✅ Session refreshed successfully');
+      } catch (refreshError) {
+        console.error('❌ Session refresh failed:', refreshError);
+        // Force user to re-authenticate
+        await supabase.auth.signOut();
+        window.location.href = '/';
+      } finally {
+        this.refreshPromise = null;
+      }
+    }
+  }
+
+  private async refreshSession(): Promise<void> {
+    const { data, error } = await supabase.auth.refreshSession();
+    
+    if (error) {
+      throw new Error(`Session refresh failed: ${error.message}`);
+    }
+    
+    if (!data.session) {
+      throw new Error('No session after refresh');
     }
   }
 
@@ -56,25 +84,59 @@ class ApiService {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    const config: RequestInit = {
-      headers: this.getHeaders(),
-      ...options,
-    };
-
-    try {
-      const response = await fetch(url, config);
-      const data = await response.json();
+    let attempt = 0;
+    const maxRetries = 2;
+    
+    while (attempt <= maxRetries) {
+      try {
+        const headers = await this.getHeaders();
+        
+        const response = await fetch(`${this.baseURL}${endpoint}`, {
+          ...options,
+          headers: {
+            ...headers,
+            ...options.headers,
+          },
+        });
 
       if (!response.ok) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
-
-      return data;
-    } catch (error) {
-      console.error('API request failed:', error);
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ message: 'Network error' }));
+          
+          // Handle authentication errors
+          if (response.status === 401 && attempt < maxRetries) {
+            await this.handleAuthError(error);
+            attempt++;
+            continue; // Retry the request
+          }
+          
+          throw new Error(error.message || `HTTP ${response.status}`);
+        }
       throw error;
+        return response.json();
+        
+      } catch (error) {
+        if (attempt >= maxRetries) {
+          console.error('API request failed after retries:', error);
+          throw error;
+        }
+        
+        // If it's an auth error, try to handle it
+        if (error instanceof Error && 
+            (error.message.includes('401') || 
+             error.message.includes('JWT') || 
+             error.message.includes('token'))) {
+          await this.handleAuthError(error);
+          attempt++;
+        } else {
+          throw error;
+        }
+      }
     }
+    
+    throw new Error('Max retries exceeded');
   }
 
   // Auth endpoints
@@ -96,10 +158,6 @@ class ApiService {
       body: JSON.stringify(credentials),
     });
     
-    if (response.session?.access_token) {
-      this.setToken(response.session.access_token);
-    }
-    
     return response;
   }
 
@@ -107,7 +165,6 @@ class ApiService {
     const response = await this.request<ApiResponse>('/auth/logout', {
       method: 'POST',
     });
-    this.setToken(null);
     return response;
   }
 
