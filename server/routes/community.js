@@ -19,7 +19,7 @@ router.get('/members', authenticateToken, asyncHandler(async (req, res) => {
     .select(`
       *,
       cultural_backgrounds(*),
-      endorsements_received:endorsements!endorsements_endorsed_id_fkey(count)
+      endorsements_received:endorsements!endorsements_endorsed_id_fkey(*)
     `)
     .eq('is_active', true)
     .neq('id', req.user.id)
@@ -27,7 +27,8 @@ router.get('/members', authenticateToken, asyncHandler(async (req, res) => {
 
   // Apply filters
   if (tribe) {
-    query = query.eq('cultural_backgrounds.primary_tribe', tribe);
+    // Filter by tribe in cultural_backgrounds
+    query = query.contains('cultural_backgrounds', [{ primary_tribe: tribe }]);
   }
   
   if (location) {
@@ -37,14 +38,21 @@ router.get('/members', authenticateToken, asyncHandler(async (req, res) => {
   const { data: members, error, count } = await query;
 
   if (error) {
+    console.error('Community members fetch error:', error);
     return res.status(500).json({
       error: 'Failed to fetch community members',
       code: 'FETCH_ERROR'
     });
   }
 
+  // Transform the data to include endorsement count
+  const transformedMembers = members?.map(member => ({
+    ...member,
+    endorsement_count: member.endorsements_received?.length || 0
+  })) || [];
+
   res.json({
-    members,
+    members: transformedMembers,
     pagination: {
       page: parseInt(page),
       limit: parseInt(limit),

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Send, 
@@ -14,9 +14,13 @@ import {
   Heart,
   CheckCheck,
   Check,
-  MessageSquare
+  MessageSquare,
+  Loader2
 } from 'lucide-react';
 import Layout from '../components/Layout';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
+import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
 interface ChatUser {
@@ -137,13 +141,138 @@ export default function Chat() {
   const [newMessage, setNewMessage] = useState('');
   const [showTranslation, setShowTranslation] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const { state } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
+  // Load conversations on component mount
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  // Load messages when conversation changes
+  useEffect(() => {
+    if (selectedUser?.conversationId) {
+      loadMessages(selectedUser.conversationId);
+    }
+  }, [selectedUser?.conversationId]);
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getConversations({ limit: 20 });
+      
+      if (response.conversations) {
+        // Transform API response to match our interface
+        const transformedConversations = response.conversations.map((conv: any) => ({
+          id: conv.other_user.id,
+          name: `${conv.other_user.first_name} ${conv.other_user.last_name}`,
+          avatar: conv.other_user.profile_photo_url || 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
+          lastMessage: 'Start a conversation...',
+          lastMessageTime: new Date(conv.last_message_at),
+          isOnline: false, // Would need real-time status
+          unreadCount: conv.unread_count || 0,
+          tribe: conv.other_user.cultural_backgrounds?.[0]?.primary_tribe || 'Not specified',
+          isMatched: true,
+          conversationId: conv.id
+        }));
+        
+        setConversations(transformedConversations);
+        if (transformedConversations.length > 0 && !selectedUser) {
+          setSelectedUser(transformedConversations[0]);
+        }
+      } else {
+        // Use mock data as fallback
+        setConversations(mockUsers);
+      }
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+      // Use mock data as fallback
+      setConversations(mockUsers);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadMessages = async (conversationId: string) => {
+    try {
+      const response = await apiService.getMessages(conversationId, { limit: 50 });
+      
+      if (response.messages) {
+        // Transform API messages to match our interface
+        const transformedMessages = response.messages.map((msg: any) => ({
+          id: msg.id,
+          senderId: msg.sender_id === state.user?.id ? 'me' : msg.sender_id,
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+          type: msg.message_type || 'text',
+          status: msg.is_read ? 'read' : 'delivered',
+          originalLanguage: msg.original_language,
+          translatedContent: msg.translated_content
+        }));
+        
+        setMessages(transformedMessages);
+      }
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+      // Keep existing messages or use mock data
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedUser) return;
+
+    if (!selectedUser.conversationId) {
+      toast.error('No conversation found');
+      return;
+    }
+
+    try {
+      setSending(true);
+      
+      // Optimistically add message to UI
+      const tempMessage: Message = {
+        id: Date.now().toString(),
+        senderId: 'me',
+        content: newMessage,
+        timestamp: new Date(),
+        type: 'text',
+        status: 'sent',
+      };
+      
+      setMessages(prev => [...prev, tempMessage]);
+      const messageContent = newMessage;
+      setNewMessage('');
+
+      // Send to API
+      await apiService.sendMessage(selectedUser.conversationId, {
+        content: messageContent,
+        message_type: 'text'
+      });
+
+      // Update message status to delivered
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempMessage.id ? { ...msg, status: 'delivered' } : msg
+      ));
+
+      toast.success('Message sent!');
+    } catch (error: any) {
+      // Remove failed message from UI
+      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
+      setNewMessage(messageContent); // Restore message content
+      toast.error(error.message || 'Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSendMessageLegacy = () => {
     if (!newMessage.trim() || !selectedUser) return;
 
     const message: Message = {
@@ -166,7 +295,7 @@ export default function Chat() {
     }, 1000);
   };
 
-  const filteredUsers = mockUsers.filter(user =>
+  const filteredUsers = (conversations.length > 0 ? conversations : mockUsers).filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -376,10 +505,14 @@ export default function Chat() {
                 
                 <button
                   onClick={handleSendMessage}
-                  disabled={!newMessage.trim()}
+                  disabled={!newMessage.trim() || sending}
                   className="p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-5 h-5" />
+                  {sending ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
                 </button>
               </div>
             </div>

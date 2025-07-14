@@ -49,7 +49,7 @@ router.get('/conversations', authenticateToken, asyncHandler(async (req, res) =>
   });
 
   res.json({
-    conversations: transformedConversations,
+    data: transformedConversations,
     pagination: {
       page: parseInt(page),
       limit: parseInt(limit),
@@ -126,7 +126,7 @@ router.get('/conversations/:id/messages', authenticateToken, asyncHandler(async 
     .eq('id', id);
 
   res.json({
-    messages: messages.reverse(), // Return in chronological order
+    data: messages.reverse(), // Return in chronological order
     pagination: {
       page: parseInt(page),
       limit: parseInt(limit),
