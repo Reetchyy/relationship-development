@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode, useEffect } from 'react';
 import { apiService } from '../services/api';
+import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
 interface User {
