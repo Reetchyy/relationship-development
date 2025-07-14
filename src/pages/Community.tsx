@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -13,9 +14,14 @@ import {
   Filter,
   Search,
   Globe,
-  Clock
+  Clock,
+  Send,
+  X
 } from 'lucide-react';
 import Layout from '../components/Layout';
+import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
+import toast from 'react-hot-toast';
 
 interface CommunityMember {
   id: string;
@@ -140,6 +146,16 @@ export default function Community() {
   const [activeTab, setActiveTab] = useState<'members' | 'endorsements' | 'events'>('members');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [showEndorseModal, setShowEndorseModal] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<CommunityMember | null>(null);
+  const [endorsementForm, setEndorsementForm] = useState({
+    type: 'cultural_knowledge',
+    message: ''
+  });
+  const [members, setMembers] = useState<CommunityMember[]>(mockMembers);
+  const [endorsements, setEndorsements] = useState<Endorsement[]>(mockEndorsements);
+  const [loading, setLoading] = useState(false);
+  const { state } = useAuth();
 
   const tabs = [
     { id: 'members', label: 'Community Members', icon: Users },
@@ -174,6 +190,69 @@ export default function Community() {
     return colors[role as keyof typeof colors] || colors.member;
   };
 
+  // Load community data
+  useEffect(() => {
+    loadCommunityData();
+  }, [activeTab]);
+
+  const loadCommunityData = async () => {
+    try {
+      setLoading(true);
+      
+      if (activeTab === 'members') {
+        const response = await apiService.getCommunityMembers({ limit: 20 });
+        if (response.members) {
+          setMembers(response.members);
+        }
+      } else if (activeTab === 'endorsements') {
+        const response = await apiService.getEndorsements({ limit: 20 });
+        if (response.endorsements) {
+          setEndorsements(response.endorsements);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load community data:', error);
+      // Use mock data as fallback
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEndorseMember = (member: CommunityMember) => {
+    setSelectedMember(member);
+    setShowEndorseModal(true);
+  };
+
+  const submitEndorsement = async () => {
+    if (!selectedMember || !endorsementForm.message.trim()) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      await apiService.createEndorsement({
+        endorsed_id: selectedMember.id,
+        endorsement_type: endorsementForm.type,
+        message: endorsementForm.message.trim()
+      });
+
+      toast.success('Endorsement submitted successfully!');
+      setShowEndorseModal(false);
+      setEndorsementForm({ type: 'cultural_knowledge', message: '' });
+      setSelectedMember(null);
+      
+      // Reload endorsements
+      if (activeTab === 'endorsements') {
+        loadCommunityData();
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to submit endorsement');
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <Layout>
       <div className="space-y-6">
@@ -288,7 +367,10 @@ export default function Community() {
                         <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors">
                           <MessageSquare className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors">
+                        <button 
+                          onClick={() => handleEndorseMember(member)}
+                          className="p-2 text-slate-400 hover:text-white hover:bg-slate-600 rounded-lg transition-colors"
+                        >
                           <Heart className="w-4 h-4" />
                         </button>
                       </div>
@@ -412,6 +494,80 @@ export default function Community() {
           )}
         </div>
       </div>
+
+      {/* Endorsement Modal */}
+      {showEndorseModal && selectedMember && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-slate-800 rounded-2xl p-6 max-w-md w-full border border-slate-700"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold text-white">Endorse {selectedMember.name}</h3>
+              <button
+                onClick={() => setShowEndorseModal(false)}
+                className="p-2 text-slate-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Endorsement Type
+                </label>
+                <select
+                  value={endorsementForm.type}
+                  onChange={(e) => setEndorsementForm(prev => ({ ...prev, type: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+                >
+                  <option value="cultural_knowledge">Cultural Knowledge</option>
+                  <option value="character">Character</option>
+                  <option value="family_values">Family Values</option>
+                  <option value="community_service">Community Service</option>
+                </select>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Your Message
+                </label>
+                <textarea
+                  value={endorsementForm.message}
+                  onChange={(e) => setEndorsementForm(prev => ({ ...prev, message: e.target.value }))}
+                  rows={4}
+                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none"
+                  placeholder="Write why you're endorsing this person..."
+                  required
+                />
+              </div>
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowEndorseModal(false)}
+                  className="flex-1 px-4 py-2 border border-slate-600 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitEndorsement}
+                  disabled={loading || !endorsementForm.message.trim()}
+                  className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Submit Endorsement
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </Layout>
   );
 }
