@@ -95,6 +95,30 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  // Set up automatic token refresh
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔐 Auth state changed:', event);
+        
+        if (event === 'SIGNED_IN' && session) {
+          // Update API service token when user signs in
+          apiService.setToken(session.access_token);
+        } else if (event === 'SIGNED_OUT') {
+          // Clear token when user signs out
+          apiService.setToken(null);
+          dispatch({ type: 'LOGOUT' });
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          console.log('✅ Token automatically refreshed');
+          // Update API service with new token
+          apiService.setToken(session.access_token);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Check authentication status on app load
   const checkAuthStatus = async () => {
     try {
